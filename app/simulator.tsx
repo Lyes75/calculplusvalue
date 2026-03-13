@@ -1,0 +1,603 @@
+"use client";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+// ── Tax Logic ──
+const IR_RATE = 0.19;
+const PS_RATE = 0.172;
+function getAbatIR(years) {
+  if (years < 6) return 0;
+  if (years <= 21) return (years - 5) * 6;
+  return 100;
+}
+function getAbatPS(years) {
+  if (years < 6) return 0;
+  if (years <= 21) return (years - 5) * 1.65;
+  if (years === 22) return ((21 - 5) * 1.65) + 1.60;
+  if (years <= 30) return ((21 - 5) * 1.65) + 1.60 + ((years - 22) * 9);
+  return 100;
+}
+function getSurtax(pvNetIR) {
+  if (pvNetIR <= 50000) return 0;
+  if (pvNetIR <= 100000) return pvNetIR * 0.02;
+  if (pvNetIR <= 150000) return pvNetIR * 0.03;
+  if (pvNetIR <= 200000) return pvNetIR * 0.04;
+  if (pvNetIR <= 250000) return pvNetIR * 0.05;
+  return pvNetIR * 0.06;
+}
+function computePV(prixAchat, prixVente, dateAchat, dateVente, fraisAcqui, travaux, fraisCession) {
+  if (!prixAchat || !prixVente || !dateAchat) return null;
+  const dVente = dateVente || new Date();
+  const dAchat = new Date(dateAchat);
+  const years = Math.floor((dVente - dAchat) / (365.25 * 24 * 60 * 60 * 1000));
+  const prixAchatCorrige = prixAchat + fraisAcqui + travaux;
+  const prixVenteCorrige = prixVente - fraisCession;
+  const pvBrute = Math.max(0, prixVenteCorrige - prixAchatCorrige);
+  if (pvBrute === 0) return { pvBrute: 0, years, abatIRPct: 0, abatPSPct: 0, pvNetIR: 0, pvNetPS: 0, impotIR: 0, impotPS: 0, surtaxe: 0, totalImpot: 0, netVendeur: prixVente - fraisCession, tauxEffectif: 0, prixAchatCorrige, prixVenteCorrige };
+  const abatIRPct = Math.min(100, getAbatIR(years));
+  const abatPSPct = Math.min(100, getAbatPS(years));
+  const pvNetIR = pvBrute * (1 - abatIRPct / 100);
+  const pvNetPS = pvBrute * (1 - abatPSPct / 100);
+  const impotIR = pvNetIR * IR_RATE;
+  const impotPS = pvNetPS * PS_RATE;
+  const surtaxe = getSurtax(pvNetIR);
+  const totalImpot = impotIR + impotPS + surtaxe;
+  return { pvBrute, years, abatIRPct, abatPSPct, pvNetIR, pvNetPS, impotIR, impotPS, surtaxe, totalImpot, netVendeur: prixVenteCorrige - totalImpot, tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0, prixAchatCorrige, prixVenteCorrige };
+}
+function fmt(n) { return (n === undefined || n === null || isNaN(n)) ? "0 €" : Math.round(n).toLocaleString("fr-FR") + " €"; }
+function fmtPct(n) { return (n === undefined || n === null || isNaN(n)) ? "0%" : n.toFixed(1).replace(".", ",") + "%"; }
+// ── Colors ──
+const C = {
+  bg: "#FAF7F3", card: "#FFFFFF", cardAlt: "#F5F0EB",
+  border: "#E8E0D8", borderFocus: "#8B7355",
+  text: "#2C2418", textMuted: "#8B7E6F", textLight: "#B5A898",
+  accent: "#8B6E3A", accentLight: "#D4B87A", accentBg: "#F5EFE3",
+  green: "#5B8C5A", greenBg: "#EDF5EC", greenBorder: "#B5D9B3",
+  red: "#B5494B", redBg: "#FBEAEA",
+  orange: "#C17C4E", orangeBg: "#FDF3EB",
+  blue: "#3B6B8C", blueBg: "#EBF3F8", blueBorder: "#B3D1E3",
+};
+// ── Tooltip ──
+function Tip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="relative inline-block ml-1.5 cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(!show)}>
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ background: "#E8DDD3", color: "#6B5B4F", fontSize: 10, fontWeight: 800 }}>?</span>
+      {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#3C3226", color: "#F5F0EB" }}>{text}</span>}
+    </span>
+  );
+}
+// ── Recommendation Engine ──
+function getRecommendations(result, data) {
+  if (!result || result.pvBrute === 0) return [];
+  const recs = [];
+  if (result.years >= 18 && result.years < 22) {
+    const yl = 22 - result.years;
+    recs.push({ type: "timing", icon: "⏳", title: `${yl} an${yl > 1 ? "s" : ""} avant l'exonération IR`, text: `En attendant ${new Date().getFullYear() + yl} pour vendre, vous économiseriez ${fmt(result.impotIR)} d'impôt sur le revenu.`, impact: result.impotIR });
+  }
+  if (result.years >= 25 && result.years < 30) {
+    const yl = 30 - result.years;
+    recs.push({ type: "timing", icon: "⏳", title: `${yl} ans avant l'exonération PS`, text: `En patientant ${yl} ans, exonération totale de prélèvements sociaux.`, impact: result.impotPS });
+  }
+  if (result.years >= 5 && data.travaux === 0) {
+    const f = data.prixAchat * 0.15;
+    const eco = f * (1 - result.abatIRPct / 100) * IR_RATE + f * (1 - result.abatPSPct / 100) * PS_RATE;
+    if (eco > 100) recs.push({ type: "optim", icon: "🔧", title: "Forfait travaux 15% applicable", text: `Sans factures, déduisez un forfait de ${fmt(f)}. Économie : ~${fmt(eco)}.`, impact: eco });
+  }
+  if (data.travaux > 0 && result.years >= 5) {
+    const f = data.prixAchat * 0.15;
+    if (f > data.travaux) recs.push({ type: "optim", icon: "📋", title: "Le forfait 15% est plus avantageux", text: `Forfait (${fmt(f)}) > travaux réels (${fmt(data.travaux)}). Optez pour le forfait.`, impact: (f - data.travaux) * 0.362 });
+  }
+  if (result.surtaxe > 0) recs.push({ type: "alert", icon: "⚠️", title: "Surtaxe applicable", text: `Plus-value nette > 50 000 €. Surtaxe : ${fmt(result.surtaxe)}.`, impact: result.surtaxe });
+  if (result.pvNetIR > 50000) recs.push({ type: "optim", icon: "👥", title: "Vendez en couple ?", text: `En indivision, le seuil de 50 000 € s'apprécie par quote-part. À deux, vous pourriez éviter la surtaxe.`, impact: result.surtaxe });
+  return recs.sort((a, b) => b.impact - a.impact).slice(0, 4);
+}
+// ── PDF Generation ──
+function generatePDFContent(result, data, recommendations, scenarios) {
+  const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const scenarioRows = scenarios.slice(0, 4).map(s => `
+    <tr><td style="padding:6px 10px;border-bottom:1px solid #E8E0D8">${s.label} (${s.year})</td>
+    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#B5494B">${fmt(s.totalImpot)}</td>
+    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#5B8C5A">${fmt(s.netVendeur)}</td></tr>`).join("");
+
+  const recoRows = recommendations.map(r => `
+    <div style="margin-bottom:10px;padding:10px 14px;background:#F5EFE3;border-radius:8px;border-left:3px solid #8B6E3A">
+      <strong>${r.icon} ${r.title}</strong><br/><span style="font-size:12px;color:#8B7E6F">${r.text}</span>
+    </div>`).join("");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#2C2418;font-size:13px;line-height:1.5}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head>
+<body style="padding:40px">
+<div style="border-bottom:3px solid #3C3226;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div style="font-family:'DM Serif Display',serif;font-size:24px;color:#3C3226">Rapport de plus-value immobilière</div>
+  <div style="font-size:12px;color:#8B7E6F;margin-top:4px">Simulation générée le ${date}</div></div>
+  <div style="font-size:11px;color:#8B7E6F;text-align:right">fiscimmo.fr<br/>Simulateur gratuit 2026</div>
+</div>
+<div style="display:flex;gap:16px;margin-bottom:24px">
+  <div style="flex:1;background:#FBEAEA;border-radius:10px;padding:16px;text-align:center">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#B5494B;font-weight:700">Impôt total</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#B5494B;margin-top:4px">${fmt(result.totalImpot)}</div>
+    <div style="font-size:11px;color:#8B7E6F">Taux effectif : ${fmtPct(result.tauxEffectif)}</div>
+  </div>
+  <div style="flex:1;background:#EDF5EC;border-radius:10px;padding:16px;text-align:center">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#5B8C5A;font-weight:700">Net vendeur</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#5B8C5A;margin-top:4px">${fmt(result.netVendeur)}</div>
+    <div style="font-size:11px;color:#8B7E6F">Après déduction de l'impôt</div>
+  </div>
+</div>
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Détail du calcul</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px">
+<tr style="background:#F5F0EB"><td style="padding:6px 10px;font-weight:600">Prix de vente</td><td style="padding:6px 10px;text-align:right">${fmt(data.prixVente)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F"></td></tr>
+<tr><td style="padding:6px 10px">− Frais de cession</td><td style="padding:6px 10px;text-align:right">− ${fmt(data.fraisCession)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F"></td></tr>
+<tr style="background:#F5F0EB;font-weight:700"><td style="padding:6px 10px">= Prix de vente corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixVenteCorrige)}</td><td></td></tr>
+<tr><td style="padding:6px 10px">Prix d'achat</td><td style="padding:6px 10px;text-align:right">${fmt(data.prixAchat)}</td><td></td></tr>
+<tr style="background:#F5F0EB"><td style="padding:6px 10px">+ Frais d'acquisition</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.fraisAcqui)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">${data.fraisMode === "forfait" ? "Forfait 7,5%" : "Réels"}</td></tr>
+<tr><td style="padding:6px 10px">+ Travaux</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.travaux)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">${data.travauxMode === "forfait" ? "Forfait 15%" : data.travauxMode === "reel" ? "Factures" : "Aucun"}</td></tr>
+<tr style="background:#F5F0EB;font-weight:700"><td style="padding:6px 10px">= Prix d'achat corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixAchatCorrige)}</td><td></td></tr>
+<tr style="border-top:2px solid #3C3226;font-weight:700"><td style="padding:10px 10px">Plus-value brute</td><td style="padding:10px 10px;text-align:right">${fmt(result.pvBrute)}</td><td style="padding:10px 10px;font-size:11px;color:#8B7E6F">Détention : ${result.years} ans</td></tr>
+<tr style="background:#F5F0EB"><td style="padding:6px 10px">Abattement IR (${fmtPct(result.abatIRPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette IR : ${fmt(result.pvNetIR)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">Exonération à 22 ans</td></tr>
+<tr><td style="padding:6px 10px;font-weight:600">Impôt sur le revenu (19%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.impotIR)}</td><td></td></tr>
+<tr style="background:#F5F0EB"><td style="padding:6px 10px">Abattement PS (${fmtPct(result.abatPSPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette PS : ${fmt(result.pvNetPS)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">Exonération à 30 ans</td></tr>
+<tr><td style="padding:6px 10px;font-weight:600">Prélèvements sociaux (17,2%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.impotPS)}</td><td></td></tr>
+${result.surtaxe > 0 ? `<tr style="background:#FBEAEA"><td style="padding:6px 10px;font-weight:600">Surtaxe (PV nette > 50K€)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.surtaxe)}</td><td></td></tr>` : ""}
+<tr style="border-top:2px solid #3C3226;font-weight:700;font-size:15px"><td style="padding:10px">TOTAL IMPÔT</td><td style="padding:10px;text-align:right;color:#B5494B">${fmt(result.totalImpot)}</td><td></td></tr>
+</table>
+${scenarios.length > 0 ? `
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Comparaison temporelle</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px">
+<tr style="background:#3C3226;color:#F5F0EB"><th style="padding:8px 10px;text-align:left">Scénario</th><th style="padding:8px 10px;text-align:right">Impôt</th><th style="padding:8px 10px;text-align:right">Net vendeur</th></tr>
+${scenarioRows}
+</table>` : ""}
+${recommendations.length > 0 ? `
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Pistes d'optimisation</div>
+${recoRows}` : ""}
+<div style="margin-top:30px;padding:14px;background:#F5F0EB;border-radius:8px;font-size:11px;color:#8B7E6F;line-height:1.6">
+<strong>Sources légales :</strong> Art. 150 U à 150 VH du CGI • Abattements : art. 150 VC • Surtaxe : art. 1609 nonies G • Taux IR : 19% (art. 200 B) • PS : 17,2%<br/>
+<strong>Avertissement :</strong> Simulation indicative à but pédagogique. Ne constitue pas un conseil fiscal. Consultez votre notaire pour un calcul définitif.
+</div>
+</body></html>`;
+}
+// ── CTA Block Component ──
+function CTABlock({ icon, title, desc, cta, color, bgColor, borderColor }) {
+  return (
+    <div style={{ background: bgColor, border: `1px solid ${borderColor}`, borderRadius: 12, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "transform 0.15s", }}
+      onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+      onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+      <div style={{ fontSize: 28, flexShrink: 0 }}>{icon}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 2 }}>{title}</div>
+        <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.4 }}>{desc}</div>
+      </div>
+      <div style={{ background: color, color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>{cta}</div>
+    </div>
+  );
+}
+// ── Email Capture Modal ──
+function EmailModal({ onClose, onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const handleSubmit = () => { if (email.includes("@")) { setSent(true); onSubmit(email); } };
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(44,36,24,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div style={{ background: C.card, borderRadius: 16, padding: 32, maxWidth: 420, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }} onClick={e => e.stopPropagation()}>
+        {!sent ? (
+          <>
+            <div style={{ fontSize: 28, textAlign: "center", marginBottom: 12 }}>📄</div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, textAlign: "center", marginBottom: 8 }}>Votre rapport détaillé</div>
+            <div style={{ fontSize: 13, color: C.textMuted, textAlign: "center", marginBottom: 20, lineHeight: 1.5 }}>
+              Recevez votre rapport complet en PDF avec le détail du calcul, les scénarios temporels, et les pistes d'optimisation personnalisées.
+            </div>
+            <input type="email" placeholder="votre@email.fr" value={email} onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleSubmit()}
+              style={{ width: "100%", padding: "12px 16px", border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 15, outline: "none", fontFamily: "'DM Sans', sans-serif", marginBottom: 12, boxSizing: "border-box" }} />
+            <button onClick={handleSubmit}
+              style={{ width: "100%", padding: "12px 0", background: "#3C3226", color: "#F5F0EB", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Recevoir mon rapport gratuit
+            </button>
+            <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", marginTop: 10 }}>Pas de spam. Données non partagées. Désabonnement en 1 clic.</div>
+          </>
+        ) : (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 8 }}>Rapport envoyé !</div>
+            <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Vérifiez votre boîte mail. Le PDF arrive dans les 30 secondes.</div>
+            <button onClick={onClose} style={{ padding: "10px 24px", background: C.cardAlt, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Fermer</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+// ── Main ──
+export default function PlusValueSimulator() {
+  const [prixAchat, setPrixAchat] = useState("");
+  const [prixVente, setPrixVente] = useState("");
+  const [dateAchat, setDateAchat] = useState("");
+  const [situation, setSituation] = useState("secondaire");
+  const [fraisMode, setFraisMode] = useState("forfait");
+  const [fraisReels, setFraisReels] = useState("");
+  const [travauxMode, setTravauxMode] = useState("forfait");
+  const [travauxReels, setTravauxReels] = useState("");
+  const [fraisCession, setFraisCession] = useState("");
+  const [activeTab, setActiveTab] = useState("result");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailCaptured, setEmailCaptured] = useState(false);
+  const pa = parseFloat(prixAchat) || 0;
+  const pv = parseFloat(prixVente) || 0;
+  const fc = parseFloat(fraisCession) || 0;
+  const fraisAcqui = fraisMode === "forfait" ? pa * 0.075 : (parseFloat(fraisReels) || 0);
+  const da = dateAchat ? new Date(dateAchat) : null;
+  const years = da ? Math.floor((new Date() - da) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
+  const travauxVal = travauxMode === "forfait" && years >= 5 ? pa * 0.15 : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
+  const isRP = situation === "principale";
+  const result = useMemo(() => {
+    if (!pa || !pv || !da) return null;
+    if (isRP) return { pvBrute: Math.max(0, pv - fc - pa - fraisAcqui - travauxVal), years, exonere: true, totalImpot: 0, netVendeur: pv - fc, tauxEffectif: 0, prixAchatCorrige: pa + fraisAcqui + travauxVal, prixVenteCorrige: pv - fc };
+    return computePV(pa, pv, da, new Date(), fraisAcqui, travauxVal, fc);
+  }, [pa, pv, da, fraisAcqui, travauxVal, fc, isRP, years]);
+  const scenarios = useMemo(() => {
+    if (!pa || !pv || !da || isRP) return [];
+    return [0, 1, 2, 3, 5].map(extra => {
+      const fd = new Date(); fd.setFullYear(fd.getFullYear() + extra);
+      const r = computePV(pa, pv, da, fd, fraisAcqui, travauxVal, fc);
+      return { label: extra === 0 ? "Aujourd'hui" : `+${extra} an${extra > 1 ? "s" : ""}`, year: new Date().getFullYear() + extra, ...r };
+    });
+  }, [pa, pv, da, fraisAcqui, travauxVal, fc, isRP]);
+  const recommendations = useMemo(() => {
+    if (!result || isRP) return [];
+    return getRecommendations(result, { prixAchat: pa, travaux: travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0 });
+  }, [result, pa, travauxMode, travauxReels, isRP]);
+  const pieData = result && !result.exonere && result.totalImpot > 0 ? [
+    { name: "Net vendeur", value: Math.max(0, result.netVendeur), fill: C.green },
+    { name: "IR (19%)", value: result.impotIR, fill: C.orange },
+    { name: "PS (17,2%)", value: result.impotPS, fill: "#8B6E5A" },
+    ...(result.surtaxe > 0 ? [{ name: "Surtaxe", value: result.surtaxe, fill: C.red }] : []),
+  ] : [];
+  const barData = scenarios.map(s => ({ name: s.label, impot: Math.round(s.totalImpot), net: Math.round(s.netVendeur) }));
+  // PDF Export
+  const handleExportPDF = useCallback(() => {
+    if (!result || result.exonere) return;
+    const dataObj = { prixAchat: pa, prixVente: pv, fraisAcqui, travaux: travauxVal, fraisCession: fc, fraisMode, travauxMode };
+    const html = generatePDFContent(result, dataObj, recommendations, scenarios);
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
+  }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios]);
+  // Email capture
+  const handleEmailSubmit = useCallback((email) => {
+    setEmailCaptured(true);
+    // In production: POST to your backend/n8n webhook
+    console.log("Email captured:", email);
+  }, []);
+  const inputStyle = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
+  const labelStyle = { fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "flex", alignItems: "center" };
+  return (
+    <div style={{ fontFamily: "'DM Sans', sans-serif", background: C.bg, minHeight: "100vh", color: C.text }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+      {showEmailModal && <EmailModal onClose={() => setShowEmailModal(false)} onSubmit={handleEmailSubmit} />}
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", padding: "32px 24px 28px", color: "#F5F0EB" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>Simulateur gratuit 2026</div>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, margin: 0, lineHeight: 1.2 }}>Plus-value immobilière</h1>
+          <p style={{ fontSize: 14, opacity: 0.7, marginTop: 8, marginBottom: 0, maxWidth: 520 }}>Calculez votre impôt en temps réel. Comparez les scénarios. Découvrez vos pistes d'optimisation.</p>
+        </div>
+      </div>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
+        {/* Form */}
+        <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Situation du bien <Tip text="La résidence principale est totalement exonérée. Pour une résidence secondaire, un locatif ou un terrain, l'impôt sur la plus-value s'applique." /></label>
+              <select value={situation} onChange={e => setSituation(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                <option value="principale">Résidence principale</option>
+                <option value="secondaire">Résidence secondaire</option>
+                <option value="locatif">Investissement locatif</option>
+                <option value="terrain">Terrain</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Prix d'achat <Tip text="Prix dans l'acte d'acquisition. Si donation/succession : valeur déclarée." /></label>
+              <input type="number" placeholder="Ex : 180 000" value={prixAchat} onChange={e => setPrixAchat(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Prix de vente <Tip text="Prix envisagé ou figurant dans le compromis." /></label>
+              <input type="number" placeholder="Ex : 280 000" value={prixVente} onChange={e => setPrixVente(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Date d'achat <Tip text="Date de l'acte authentique. Détermine la durée de détention et les abattements." /></label>
+              <input type="date" value={dateAchat} onChange={e => setDateAchat(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Frais d'acquisition <Tip text="Forfait 7,5% (sans justificatif) ou montant réel des frais de notaire." /></label>
+              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                {["forfait", "reel"].map(m => (
+                  <button key={m} onClick={() => setFraisMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${fraisMode === m ? C.accent : C.border}`, borderRadius: 6, cursor: "pointer", background: fraisMode === m ? C.accentBg : C.card, color: fraisMode === m ? C.accent : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                    {m === "forfait" ? "Forfait 7,5%" : "Réels"}
+                  </button>
+                ))}
+              </div>
+              {fraisMode === "reel" && <input type="number" placeholder="Montant" value={fraisReels} onChange={e => setFraisReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
+              {fraisMode === "forfait" && pa > 0 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * 0.075)}</div>}
+            </div>
+            <div>
+              <label style={labelStyle}>Travaux <Tip text="Forfait 15% si détention > 5 ans (sans justificatif) ou réels avec factures d'entreprises." /></label>
+              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                {["forfait", "reel", "aucun"].map(m => (
+                  <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m ? C.accent : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m ? C.accentBg : C.card, color: travauxMode === m ? C.accent : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                    {m === "forfait" ? "Forfait 15%" : m === "reel" ? "Réels" : "Aucun"}
+                  </button>
+                ))}
+              </div>
+              {travauxMode === "reel" && <input type="number" placeholder="Montant factures" value={travauxReels} onChange={e => setTravauxReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
+              {travauxMode === "forfait" && pa > 0 && years >= 5 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * 0.15)}</div>}
+              {travauxMode === "forfait" && years < 5 && years > 0 && <div style={{ fontSize: 12, color: C.orange, marginTop: 2 }}>Disponible après 5 ans de détention</div>}
+            </div>
+            <div>
+              <label style={labelStyle}>Frais de cession <Tip text="Diagnostics, frais d'agence à votre charge, mainlevée d'hypothèque. Déduits du prix de vente." /></label>
+              <input type="number" placeholder="Diagnostics, agence..." value={fraisCession} onChange={e => setFraisCession(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
+        </div>
+        {/* ═══ RESULTS ═══ */}
+        {result && (
+          <>
+            {/* RP Exonération */}
+            {isRP && (
+              <div style={{ background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 14, padding: "28px 20px", marginBottom: 20, textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: C.green, marginBottom: 8 }}>Exonération totale</div>
+                <div style={{ fontSize: 14, color: C.textMuted, maxWidth: 420, margin: "0 auto" }}>La vente de votre résidence principale est totalement exonérée d'impôt sur la plus-value.</div>
+                {result.pvBrute > 0 && <div style={{ marginTop: 16, fontSize: 16, fontWeight: 700, color: C.green }}>Économie réalisée : {fmt(result.pvBrute * 0.362)}</div>}
+              </div>
+            )}
+            {/* Non-RP Results */}
+            {!isRP && result.pvBrute !== undefined && (
+              <>
+                {/* Tabs + Export buttons */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 8, marginBottom: 2 }}>
+                  <div style={{ display: "flex", gap: 4, paddingLeft: 8 }}>
+                    {[{ id: "result", label: "Résultat" }, { id: "scenarios", label: "Scénarios" }, { id: "detail", label: "Détail calcul" }].map(tab => (
+                      <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        style={{ padding: "10px 18px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: "10px 10px 0 0", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: activeTab === tab.id ? C.card : "transparent", color: activeTab === tab.id ? C.text : C.textMuted, borderBottom: activeTab === tab.id ? `2px solid ${C.accent}` : "none" }}>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  {result.pvBrute > 0 && (
+                    <div style={{ display: "flex", gap: 8, paddingRight: 4, paddingBottom: 4 }}>
+                      <button onClick={handleExportPDF} style={{ padding: "7px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${C.border}`, borderRadius: 8, cursor: "pointer", background: C.card, color: C.text, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                        📄 Imprimer / PDF
+                      </button>
+                      <button onClick={() => setShowEmailModal(true)} style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 8, cursor: "pointer", background: "#3C3226", color: "#F5F0EB", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                        ✉️ Recevoir par email
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div style={{ background: C.card, borderRadius: "0 14px 14px 14px", border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
+                  {/* TAB: Result */}
+                  {activeTab === "result" && (
+                    <div>
+                      {result.pvBrute === 0 ? (
+                        <div style={{ textAlign: "center", padding: 24 }}>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>📉</div>
+                          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20 }}>Pas de plus-value</div>
+                          <div style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>Le prix de vente corrigé est inférieur ou égal au prix d'achat corrigé.</div>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14, marginBottom: 24 }}>
+                            <div style={{ background: C.redBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.red, fontWeight: 700, marginBottom: 4 }}>Impôt total</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.red }}>{fmt(result.totalImpot)}</div>
+                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Taux effectif : {fmtPct(result.tauxEffectif)}</div>
+                            </div>
+                            <div style={{ background: C.greenBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.green, fontWeight: 700, marginBottom: 4 }}>Net vendeur</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.green }}>{fmt(result.netVendeur)}</div>
+                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Après impôt</div>
+                            </div>
+                            <div style={{ background: C.accentBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.accent, fontWeight: 700, marginBottom: 4 }}>Plus-value brute</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.accent }}>{fmt(result.pvBrute)}</div>
+                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Détention : {result.years} ans</div>
+                            </div>
+                          </div>
+                          {pieData.length > 0 && (
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
+                              <div style={{ width: 170, height: 170 }}>
+                                <ResponsiveContainer><PieChart><Pie data={pieData} dataKey="value" cx="50%" cy="50%" innerRadius={42} outerRadius={75} paddingAngle={2} strokeWidth={0}>{pieData.map((e, i) => <Cell key={i} fill={e.fill} />)}</Pie></PieChart></ResponsiveContainer>
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                {pieData.map((d, i) => (
+                                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ width: 10, height: 10, borderRadius: 2, background: d.fill, display: "inline-block" }} />
+                                    <span style={{ fontSize: 13, color: C.textMuted, minWidth: 90 }}>{d.name}</span>
+                                    <span style={{ fontSize: 13, fontWeight: 600 }}>{fmt(d.value)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Abattement bars */}
+                          <div>
+                            {[
+                              { label: "Abattement IR", pct: result.abatIRPct, target: 22, color: C.accent },
+                              { label: "Abattement PS", pct: result.abatPSPct, target: 30, color: "#8B6E5A" },
+                            ].map((b, i) => (
+                              <div key={i} style={{ marginBottom: i === 0 ? 14 : 0 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, marginBottom: 5 }}>
+                                  <span>{b.label} : {fmtPct(b.pct)}</span>
+                                  <span style={{ color: b.pct >= 100 ? C.green : C.textMuted }}>{b.pct >= 100 ? "Exonéré ✓" : `Exonération dans ${Math.max(0, b.target - result.years)} ans`}</span>
+                                </div>
+                                <div style={{ height: 8, background: C.cardAlt, borderRadius: 4, overflow: "hidden" }}>
+                                  <div style={{ width: `${Math.min(100, b.pct)}%`, height: "100%", background: b.pct >= 100 ? C.green : b.color, borderRadius: 4, transition: "width 0.6s ease" }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {/* TAB: Scenarios */}
+                  {activeTab === "scenarios" && scenarios.length > 0 && (
+                    <div>
+                      <p style={{ fontSize: 14, color: C.textMuted, marginTop: 0, marginBottom: 16 }}>Comparez l'impôt selon la date de vente — à prix de vente constant.</p>
+                      <div style={{ height: 250 }}>
+                        <ResponsiveContainer>
+                          <BarChart data={barData} barGap={4}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: C.textMuted }} />
+                            <YAxis tick={{ fontSize: 11, fill: C.textMuted }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                            <RTooltip formatter={v => fmt(v)} contentStyle={{ fontSize: 13, borderRadius: 8, border: `1px solid ${C.border}` }} />
+                            <Bar dataKey="impot" name="Impôt" fill={C.red} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="net" name="Net vendeur" fill={C.green} radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8, marginTop: 16 }}>
+                        {scenarios.map((s, i) => (
+                          <div key={i} style={{ background: i === 0 ? C.accentBg : C.cardAlt, borderRadius: 10, padding: 12, textAlign: "center", border: i === 0 ? `1.5px solid ${C.accentLight}` : `1px solid ${C.border}` }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, marginBottom: 3 }}>{s.label}</div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>Impôt</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: C.red }}>{fmt(s.totalImpot)}</div>
+                            {i > 0 && s.totalImpot < scenarios[0].totalImpot && (
+                              <div style={{ fontSize: 11, color: C.green, fontWeight: 600, marginTop: 2 }}>−{fmt(scenarios[0].totalImpot - s.totalImpot)}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* TAB: Detail */}
+                  {activeTab === "detail" && result.pvBrute > 0 && (
+                    <div style={{ fontSize: 14 }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <tbody>
+                          {[
+                            ["Prix de vente", fmt(pv), ""],
+                            ["− Frais de cession", `− ${fmt(fc)}`, ""],
+                            ["= Prix de vente corrigé", fmt(pv - fc), "", true],
+                            [null],
+                            ["Prix d'achat", fmt(pa), ""],
+                            ["+ Frais d'acquisition", `+ ${fmt(fraisAcqui)}`, fraisMode === "forfait" ? "Forfait 7,5%" : "Réels"],
+                            ["+ Travaux", `+ ${fmt(travauxVal)}`, travauxMode === "forfait" ? "Forfait 15%" : travauxMode === "reel" ? "Factures" : "—"],
+                            ["= Prix d'achat corrigé", fmt(pa + fraisAcqui + travauxVal), "", true],
+                            [null],
+                            ["Plus-value brute", fmt(result.pvBrute), `Détention : ${result.years} ans`, true],
+                            [null],
+                            [`Abattement IR (${fmtPct(result.abatIRPct)})`, `→ PV nette : ${fmt(result.pvNetIR)}`, "Exon. à 22 ans"],
+                            ["Impôt sur le revenu (19%)", fmt(result.impotIR), "", true],
+                            [null],
+                            [`Abattement PS (${fmtPct(result.abatPSPct)})`, `→ PV nette : ${fmt(result.pvNetPS)}`, "Exon. à 30 ans"],
+                            ["Prélèvements sociaux (17,2%)", fmt(result.impotPS), "", true],
+                            ...(result.surtaxe > 0 ? [[null], ["Surtaxe (PV > 50K€)", fmt(result.surtaxe), "", true]] : []),
+                            [null],
+                            ["TOTAL IMPÔT", fmt(result.totalImpot), `Taux effectif : ${fmtPct(result.tauxEffectif)}`, true],
+                            ["NET VENDEUR", fmt(result.netVendeur), "", true],
+                          ].map((row, i) => row[0] === null ? (
+                            <tr key={i}><td colSpan={3} style={{ height: 6 }}></td></tr>
+                          ) : (
+                            <tr key={i} style={{ borderBottom: `1px solid ${C.cardAlt}` }}>
+                              <td style={{ padding: "7px 4px", fontWeight: row[3] ? 700 : 400, color: row[3] ? C.text : C.textMuted }}>{row[0]}</td>
+                              <td style={{ padding: "7px 4px", textAlign: "right", fontWeight: row[3] ? 700 : 500, fontVariantNumeric: "tabular-nums" }}>{row[1]}</td>
+                              <td style={{ padding: "7px 4px", fontSize: 12, color: C.textMuted }}>{row[2]}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div style={{ marginTop: 16, padding: 12, background: C.cardAlt, borderRadius: 8, fontSize: 11, color: C.textMuted, lineHeight: 1.6 }}>
+                        <strong>Sources :</strong> Art. 150 U à 150 VH du CGI • Abattements : art. 150 VC • Surtaxe : art. 1609 nonies G • IR : 19% (art. 200 B) • PS : 17,2%
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* ═══ RECOMMENDATIONS ═══ */}
+                {recommendations.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: C.accent, marginBottom: 12, paddingLeft: 4 }}>Pistes d'optimisation</div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {recommendations.map((rec, i) => (
+                        <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px", borderLeft: `4px solid ${rec.type === "alert" ? C.red : rec.type === "timing" ? C.accent : C.green}` }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                            <span style={{ fontSize: 20 }}>{rec.icon}</span>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{rec.title}</div>
+                              <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.5 }}>{rec.text}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* ═══ CTA AFFILIATION BLOCKS ═══ */}
+                {result.pvBrute > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: C.textMuted, marginBottom: 12, paddingLeft: 4 }}>Pour aller plus loin</div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {result.totalImpot > 2000 && (
+                        <CTABlock
+                          icon="🎯" title="Optimisez votre fiscalité immobilière"
+                          desc={`Vous payez ${fmt(result.totalImpot)} d'impôt. Un conseiller patrimonial peut vous aider à réduire ce montant via des stratégies légales.`}
+                          cta="Bilan gratuit" color={C.accent} bgColor={C.accentBg} borderColor={C.accentLight}
+                        />
+                      )}
+                      <CTABlock
+                        icon="🏠" title="Estimez la valeur réelle de votre bien"
+                        desc="Obtenez une estimation gratuite basée sur les transactions récentes dans votre quartier."
+                        cta="Estimer" color={C.blue} bgColor={C.blueBg} borderColor={C.blueBorder}
+                      />
+                      {result.netVendeur > 50000 && (
+                        <CTABlock
+                          icon="📈" title="Réinvestissez intelligemment"
+                          desc={`${fmt(result.netVendeur)} à placer ? Comparez les SCPI, l'assurance-vie et les placements immobiliers pour faire fructifier votre capital.`}
+                          cta="Comparer" color={C.green} bgColor={C.greenBg} borderColor={C.greenBorder}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+                {/* ═══ EMAIL CAPTURE BANNER ═══ */}
+                {result.pvBrute > 0 && !emailCaptured && (
+                  <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", borderRadius: 14, padding: "24px 20px", marginBottom: 20, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}
+                    onClick={() => setShowEmailModal(true)} role="button" tabIndex={0}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#F5F0EB", marginBottom: 6 }}>Recevez votre rapport complet</div>
+                      <div style={{ fontSize: 13, color: "#B5A898", lineHeight: 1.5 }}>PDF détaillé avec calcul ligne par ligne, comparaison temporelle, pistes d'optimisation et références légales. À montrer à votre notaire.</div>
+                    </div>
+                    <button style={{ padding: "12px 24px", background: C.accentLight, color: "#3C3226", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>
+                      ✉️ Recevoir gratuitement
+                    </button>
+                  </div>
+                )}
+                {emailCaptured && result.pvBrute > 0 && (
+                  <div style={{ background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 20 }}>✅</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>Rapport envoyé</div>
+                      <div style={{ fontSize: 13, color: C.textMuted }}>Vérifiez votre boîte mail. Vous pouvez aussi <button onClick={handleExportPDF} style={{ background: "none", border: "none", color: C.accent, fontWeight: 600, cursor: "pointer", textDecoration: "underline", fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: 0 }}>imprimer directement</button>.</div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+        {/* Empty state */}
+        {!result && (
+          <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "48px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.3 }}>🏠</div>
+            <div style={{ fontSize: 15, color: C.textMuted }}>Renseignez vos informations pour calculer votre plus-value en temps réel.</div>
+          </div>
+        )}
+        {/* Footer */}
+        <div style={{ marginTop: 32, padding: "16px 0", borderTop: `1px solid ${C.border}`, fontSize: 11, color: C.textLight, textAlign: "center", lineHeight: 1.7 }}>
+          Simulation indicative basée sur les barèmes en vigueur au 1er janvier 2026 (art. 150 U à 150 VH du CGI).
+          <br/>Ne constitue pas un conseil fiscal. Consultez votre notaire pour un calcul définitif.
+        </div>
+      </div>
+    </div>
+  );
+}
