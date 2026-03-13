@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Mentions légales — calculplusvalue.fr",
   description: "Mentions légales du site calculplusvalue.fr : éditeur, hébergeur, propriété intellectuelle.",
-  robots: "noindex, follow",
+  robots: "index, follow",
 };
 
 export default function MentionsLegales() {
