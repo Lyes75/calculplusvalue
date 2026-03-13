@@ -1,33 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 100" width="580" height="100">
-
-  <!-- === ICÔNE : tout en blanc, trait contour === -->
-  <g transform="translate(2, 6)">
-
-    <!-- Toit (contour blanc, trait épais) -->
-    <polyline points="0,44 44,6 88,44" fill="none" stroke="white" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-
-    <!-- Murs maison (contour blanc) -->
-    <polyline points="12,44 12,88 76,88 76,44" fill="none" stroke="white" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-
-    <!-- Fenêtre carrée centrale -->
-    <rect x="30" y="54" width="20" height="20" fill="none" stroke="white" stroke-width="5"/>
-
-    <!-- 3 barres pleines blanches croissantes -->
-    <rect x="14" y="72" width="13" height="16" fill="white" rx="1"/>
-    <rect x="32" y="62" width="13" height="26" fill="white" rx="1"/>
-    <rect x="60" y="52" width="13" height="36" fill="white" rx="1"/>
-
-    <!-- Courbe blanche partant du toit (sommet) vers la droite -->
-    <path d="M44,6 C62,-6 84,4 96,22" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
-
-    <!-- Flèche au bout de la courbe -->
-    <polyline points="84,14 96,22 88,32" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-
-  </g>
-
-  <!-- === TEXTE === -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="420" height="70">
   <text font-family="'DM Sans','Inter','Helvetica Neue',Arial,sans-serif" font-size="40" font-weight="700" letter-spacing="-0.5">
-    <tspan x="116" y="68" fill="white">calculplusvalue</tspan><tspan fill="#56CBAD">.fr</tspan>
+    <tspan x="0" y="50" fill="white">calculplusvalue</tspan><tspan fill="#56CBAD">.fr</tspan>
   </text>
-
 </svg>
