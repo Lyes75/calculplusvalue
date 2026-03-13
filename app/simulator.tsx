@@ -780,6 +780,11 @@ export default function PlusValueSimulator() {
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 13, color: "#9B97C4", fontFamily: "'DM Serif Display', serif" }}>calculplusvalue.fr</div>
           <div style={{ fontSize: 11, color: "#6E6B8A" }}>© 2026 — Simulateur gratuit de plus-value immobilière — Simulation indicative, non contractuelle</div>
+          <div style={{ fontSize: 11 }}>
+            <a href="/mentions-legales" style={{ color: "#9B97C4", textDecoration: "none", borderBottom: "1px solid #4A4870" }}>
+              Mentions légales
+            </a>
+          </div>
         </div>
       </div>
     </div>
