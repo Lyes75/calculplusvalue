@@ -304,6 +304,29 @@ export default function PlusValueSimulator() {
         </div>
       </div>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
+
+        {/* ── Intro avant simulateur ── */}
+        <div style={{ marginBottom: 24 }}>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 400, color: C.text, margin: "0 0 12px 0" }}>
+            Calculez votre impôt sur la plus-value en 30 secondes
+          </h2>
+          <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.7, margin: 0, maxWidth: 720 }}>
+            Renseignez les informations de votre bien ci-dessous. Le simulateur applique automatiquement les <strong>abattements pour durée de détention</strong>, le forfait travaux, les frais de notaire et la surtaxe si applicable. Le résultat s'affiche en temps réel.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 16 }}>
+            {[
+              { icon: "🏠", text: "Résidence secondaire, locatif ou terrain" },
+              { icon: "📅", text: "Exonération IR à 22 ans, PS à 30 ans" },
+              { icon: "💡", text: "Pistes d'optimisation personnalisées" },
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.textMuted }}>
+                <span style={{ fontSize: 16 }}>{item.icon}</span>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Form */}
         <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
