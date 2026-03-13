@@ -64,7 +64,7 @@ function Tip({ text }) {
   return (
     <span className="relative inline-block ml-3 cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(!show)}>
       <span className="inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ background: "#EEEDF5", color: "#3F3D6E", fontSize: 10, fontWeight: 800 }}>?</span>
-      {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#2D2B55", color: "#E0DEF0" }}>{text}</span>}
+      {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#FFFFFF", color: "#1E1C3A", border: "1px solid #C5C2D8", boxShadow: "0 4px 16px rgba(45,43,85,0.18)" }}>{text}</span>}
     </span>
   );
 }
