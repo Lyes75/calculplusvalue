@@ -45,10 +45,14 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-P9WX964B');` }} />
         <link rel="icon" href="/favicon.ico" />
-        <meta name="theme-color" content="#3C3226" />
+        <meta name="theme-color" content="#2D2B55" />
       </head>
-      <body style={{ margin: 0, padding: 0 }}>{children}</body>
+      <body style={{ margin: 0, padding: 0 }}>
+        <noscript dangerouslySetInnerHTML={{ __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P9WX964B" height="0" width="0" style="display:none;visibility:hidden"></iframe>` }} />
+        {children}
+      </body>
     </html>
   );
 }
