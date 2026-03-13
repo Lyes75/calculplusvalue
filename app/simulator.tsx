@@ -275,11 +275,26 @@ export default function PlusValueSimulator() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
       {showEmailModal && <EmailModal onClose={() => setShowEmailModal(false)} onSubmit={handleEmailSubmit} />}
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", padding: "32px 24px 28px", color: "#F5F0EB" }}>
+      <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", padding: "44px 24px 40px", color: "#F5F0EB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.6, marginBottom: 8 }}>Simulateur gratuit 2026</div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, margin: 0, lineHeight: 1.2 }}>Plus-value immobilière</h1>
-          <p style={{ fontSize: 14, opacity: 0.7, marginTop: 8, marginBottom: 0, maxWidth: 520 }}>Calculez votre impôt en temps réel. Comparez les scénarios. Découvrez vos pistes d'optimisation.</p>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.55, marginBottom: 12 }}>Simulateur gratuit 2026 — Barèmes à jour</div>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15 }}>Calcul de la plus-value immobilière</h1>
+          <p style={{ fontSize: 16, opacity: 0.75, marginTop: 12, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
+            Estimez votre impôt sur la plus-value en quelques secondes. Abattements pour durée de détention, surtaxe, résidence principale : toutes les règles fiscales 2026 appliquées automatiquement.
+          </p>
+          {/* Réassurance badges */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {[
+              { icon: "⚡", label: "Résultat instantané" },
+              { icon: "📐", label: "Barèmes CGI 2026" },
+              { icon: "🔒", label: "100% gratuit, sans inscription" },
+              { icon: "📄", label: "Export PDF inclus" },
+            ].map((b, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 500 }}>
+                <span>{b.icon}</span><span style={{ opacity: 0.9 }}>{b.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
@@ -596,6 +611,135 @@ export default function PlusValueSimulator() {
         <div style={{ marginTop: 32, padding: "16px 0", borderTop: `1px solid ${C.border}`, fontSize: 11, color: C.textLight, textAlign: "center", lineHeight: 1.7 }}>
           Simulation indicative basée sur les barèmes en vigueur au 1er janvier 2026 (art. 150 U à 150 VH du CGI).
           <br/>Ne constitue pas un conseil fiscal. Consultez votre notaire pour un calcul définitif.
+        </div>
+      </div>
+
+      {/* ═══ SEO CONTENT SECTION ═══ */}
+      <div style={{ background: C.card, borderTop: `1px solid ${C.border}`, padding: "60px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+
+          {/* Comment ça marche */}
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Comment calculer la plus-value immobilière ?</h2>
+          <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.7, marginBottom: 32, maxWidth: 720 }}>
+            La plus-value immobilière est la différence entre le <strong>prix de cession corrigé</strong> (prix de vente diminué des frais) et le <strong>prix d'acquisition corrigé</strong> (prix d'achat augmenté des frais de notaire et des travaux). Elle est soumise à l'impôt sur le revenu (19%) et aux prélèvements sociaux (17,2%), soit un taux global de 36,2% avant abattements.
+          </p>
+
+          {/* 3 colonnes : comment fonctionne le calcul */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginBottom: 48 }}>
+            {[
+              {
+                step: "1",
+                title: "Prix de cession corrigé",
+                desc: "Partez du prix de vente, puis déduisez les frais à votre charge : diagnostics, frais d'agence vendeur, mainlevée d'hypothèque. C'est votre base de départ.",
+              },
+              {
+                step: "2",
+                title: "Prix d'acquisition corrigé",
+                desc: "Ajoutez au prix d'achat les frais de notaire (forfait 7,5% ou réels) et les travaux (forfait 15% après 5 ans de détention, ou montant réel sur factures d'entreprises).",
+              },
+              {
+                step: "3",
+                title: "Abattements pour durée",
+                desc: "La plus-value brute est réduite selon la durée de détention. L'exonération totale intervient à 22 ans pour l'IR et 30 ans pour les prélèvements sociaux.",
+              },
+            ].map((item, i) => (
+              <div key={i} style={{ background: C.cardAlt, borderRadius: 12, padding: "20px 18px" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{item.step}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: C.text }}>{item.title}</div>
+                <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tableau abattements */}
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Tableau des abattements 2026</h2>
+          <p style={{ fontSize: 14, color: C.textMuted, marginBottom: 16, lineHeight: 1.6 }}>
+            Les abattements pour durée de détention s'appliquent différemment selon qu'il s'agit de l'impôt sur le revenu (IR) ou des prélèvements sociaux (PS).
+          </p>
+          <div style={{ overflowX: "auto", marginBottom: 48 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 480 }}>
+              <thead>
+                <tr style={{ background: "#3C3226", color: "#F5F0EB" }}>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600 }}>Durée de détention</th>
+                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement IR / an</th>
+                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement PS / an</th>
+                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Cumul IR</th>
+                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Cumul PS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Moins de 6 ans", "0%", "0%", "0%", "0%"],
+                  ["6e à 21e année", "6% / an", "1,65% / an", "6% → 96%", "1,65% → 26,4%"],
+                  ["22e année", "4%", "1,60%", "100% → exonéré", "28%"],
+                  ["23e à 30e année", "—", "9% / an", "—", "28% → 100%"],
+                  ["Au-delà de 30 ans", "—", "—", "Exonéré", "Exonéré"],
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? C.cardAlt : C.card, borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: "9px 14px", fontWeight: 500 }}>{row[0]}</td>
+                    <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[1]}</td>
+                    <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[2]}</td>
+                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: C.accent }}>{row[3]}</td>
+                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: "#8B6E5A" }}>{row[4]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* FAQ */}
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 24, marginTop: 0 }}>Questions fréquentes</h2>
+          <div style={{ display: "grid", gap: 14, marginBottom: 48 }}>
+            {[
+              {
+                q: "La résidence principale est-elle exonérée de plus-value ?",
+                a: "Oui, totalement. La vente de votre résidence principale bénéficie d'une exonération totale d'impôt sur la plus-value, quelle que soit la durée de détention et le montant de la plus-value réalisée (art. 150 U II 1° du CGI). Il faut que le bien soit votre résidence habituelle et effective au moment de la cession.",
+              },
+              {
+                q: "Peut-on déduire les travaux pour réduire la plus-value ?",
+                a: "Oui. Vous pouvez déduire les dépenses de travaux de construction, reconstruction, agrandissement ou amélioration réalisés par une entreprise (sur factures). Si vous détenez le bien depuis plus de 5 ans, vous pouvez opter pour le forfait de 15% du prix d'achat sans justificatif, si ce montant est plus avantageux.",
+              },
+              {
+                q: "Qu'est-ce que la surtaxe sur les plus-values élevées ?",
+                a: "Une surtaxe progressive s'applique lorsque la plus-value nette imposable à l'IR dépasse 50 000 €. Elle va de 2% (entre 50 001 et 100 000 €) à 6% (au-delà de 250 000 €). Elle est calculée sur la totalité de la plus-value nette IR dès le premier euro dès lors que le seuil est franchi.",
+              },
+              {
+                q: "Comment sont calculés les frais de notaire forfaitaires ?",
+                a: "Le forfait de frais d'acquisition est fixé à 7,5% du prix d'achat. Il comprend les droits de mutation, les émoluments du notaire et les frais divers. Vous pouvez utiliser ce forfait même sans justificatifs, ou opter pour les frais réels s'ils sont supérieurs (cas rare pour les biens anciens).",
+              },
+              {
+                q: "Quand la plus-value est-elle totalement exonérée ?",
+                a: "L'exonération totale d'impôt sur le revenu (19%) intervient après 22 ans de détention. Pour les prélèvements sociaux (17,2%), il faut attendre 30 ans. Au-delà de ces durées, aucun impôt n'est dû sur la plus-value, quelle que soit son montant.",
+              },
+            ].map((item, i) => (
+              <details key={i} style={{ background: C.cardAlt, borderRadius: 10, padding: "16px 18px", border: `1px solid ${C.border}`, cursor: "pointer" }}>
+                <summary style={{ fontWeight: 600, fontSize: 14, color: C.text, listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  {item.q}
+                  <span style={{ fontSize: 18, color: C.accent, flexShrink: 0 }}>+</span>
+                </summary>
+                <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.7, marginTop: 12, marginBottom: 0 }}>{item.a}</p>
+              </details>
+            ))}
+          </div>
+
+          {/* Références légales */}
+          <div style={{ background: C.cardAlt, borderRadius: 12, padding: "20px 18px", border: `1px solid ${C.border}` }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 8 }}>📚 Références légales et sources</div>
+            <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.8 }}>
+              <strong>Code général des impôts :</strong> Art. 150 U à 150 VH (plus-values immobilières des particuliers) • Art. 150 VC (abattements pour durée de détention) • Art. 200 B (taux d'imposition de 19%) • Art. 1609 nonies G (surtaxe progressive)<br/>
+              <strong>Prélèvements sociaux :</strong> CSG 9,2% + CRDS 0,5% + prélèvement de solidarité 7,5% = 17,2% (art. L136-7 CSS)<br/>
+              <strong>Barème :</strong> En vigueur au 1er janvier 2026 — <a href="https://www.impots.gouv.fr" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>impots.gouv.fr</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div style={{ background: "#3C3226", padding: "20px 24px", textAlign: "center" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 13, color: "#B5A898", fontFamily: "'DM Serif Display', serif" }}>calculplusvalue.fr</div>
+          <div style={{ fontSize: 11, color: "#7A6A58" }}>© 2026 — Simulateur gratuit de plus-value immobilière — Simulation indicative, non contractuelle</div>
         </div>
       </div>
     </div>
