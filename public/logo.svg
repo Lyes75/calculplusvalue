@@ -1,23 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 100" width="560" height="100">
-  <!-- Fond : transparent -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 100" width="580" height="100">
 
-  <!-- === ICÔNE === -->
-  <!-- Corps maison (plein blanc) -->
-  <path d="M12,46 L48,14 L84,46 L84,88 L12,88 Z" fill="white"/>
-  <!-- Trou fenêtre centrale -->
-  <rect x="40" y="58" width="16" height="16" fill="#2D2B55"/>
-  <!-- Barre graphique gauche (intérieure maison) -->
-  <rect x="18" y="72" width="12" height="16" fill="#2D2B55" rx="1"/>
-  <!-- Barre graphique milieu -->
-  <rect x="34" y="62" width="12" height="26" fill="#2D2B55" rx="1"/>
-  <!-- Barre graphique droite (dépasse la maison) -->
-  <rect x="62" y="50" width="12" height="38" fill="white" rx="1"/>
-  <!-- Courbe menthe partant du toit vers la droite -->
-  <path d="M48,14 C62,2 82,10 96,32" fill="none" stroke="#56CBAD" stroke-width="6" stroke-linecap="round"/>
-  <!-- Flèche bout de courbe -->
-  <polyline points="86,24 96,32 88,40" fill="none" stroke="#56CBAD" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- === ICÔNE maison + barres + courbe === -->
+  <g transform="translate(0, 4)">
+    <!-- Toit plein indigo -->
+    <polygon points="46,0 92,38 0,38" fill="white"/>
+    <!-- Murs maison -->
+    <rect x="8" y="36" width="76" height="52" fill="white"/>
+    <!-- Découpe toit intérieure (fenêtre toit) -->
+    <polygon points="46,10 82,36 10,36" fill="#2D2B55"/>
+    <!-- Porte/fenêtre centrale -->
+    <rect x="34" y="54" width="24" height="22" fill="#2D2B55" rx="2"/>
 
-  <!-- === TEXTE === -->
-  <text x="112" y="68" font-family="'DM Sans','Inter','Helvetica Neue',Arial,sans-serif" font-size="40" font-weight="700" fill="white" letter-spacing="-1">calculplusvalue</text>
-  <text x="452" y="68" font-family="'DM Sans','Inter','Helvetica Neue',Arial,sans-serif" font-size="40" font-weight="700" fill="#56CBAD" letter-spacing="-1">.fr</text>
+    <!-- Barre gauche (courte) -->
+    <rect x="10" y="66" width="16" height="22" fill="#2D2B55" rx="1"/>
+    <!-- Barre milieu -->
+    <rect x="30" y="54" width="16" height="34" fill="#2D2B55" rx="1"/>
+    <!-- Barre droite (haute, dépasse maison) -->
+    <rect x="66" y="42" width="16" height="46" fill="white" rx="1"/>
+
+    <!-- Courbe menthe : part du bas gauche, monte vers le haut droit -->
+    <path d="M8,80 C30,60 60,20 92,8" fill="none" stroke="#56CBAD" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- === TEXTE : un seul bloc soudé === -->
+  <text font-family="'DM Sans','Inter','Helvetica Neue',Arial,sans-serif" font-size="40" font-weight="700" letter-spacing="-0.5">
+    <tspan x="110" y="68" fill="white">calculplusvalue</tspan><tspan fill="#56CBAD">.fr</tspan>
+  </text>
+
 </svg>
