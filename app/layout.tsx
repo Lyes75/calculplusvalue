@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "Simulation Plus-Value Immobilière 2026 — Simulateur Gratuit",
+  title: "Simulation Plus-Value Immobilière 2026 : Calcul, Tableau & Impôt Gratuit",
   description:
     "Simulation plus-value immobilière gratuite et instantanée. Calculez votre impôt, abattements pour durée de détention, surtaxe. Barèmes CGI 2026 à jour.",
   keywords: [

@@ -47,22 +47,24 @@ function fmt(n: number) { return (n === undefined || n === null || isNaN(n)) ? "
 function fmtPct(n: number) { return (n === undefined || n === null || isNaN(n)) ? "0%" : n.toFixed(1).replace(".", ",") + "%"; }
 // ── Colors ──
 const C = {
-  bg: "#FAF7F3", card: "#FFFFFF", cardAlt: "#F5F0EB",
-  border: "#E8E0D8", borderFocus: "#8B7355",
-  text: "#2C2418", textMuted: "#8B7E6F", textLight: "#B5A898",
-  accent: "#8B6E3A", accentLight: "#D4B87A", accentBg: "#F5EFE3",
-  green: "#5B8C5A", greenBg: "#EDF5EC", greenBorder: "#B5D9B3",
-  red: "#B5494B", redBg: "#FBEAEA",
-  orange: "#C17C4E", orangeBg: "#FDF3EB",
-  blue: "#3B6B8C", blueBg: "#EBF3F8", blueBorder: "#B3D1E3",
+  bg: "#F6F5FA", card: "#FFFFFF", cardAlt: "#EEEDF5",
+  border: "#D8D6E8", borderFocus: "#3F3D6E",
+  text: "#1E1C3A", textMuted: "#6E6B8A", textLight: "#A09DB8",
+  accent: "#56CBAD", accentLight: "#A8E8D6", accentBg: "#EEEDF5",
+  green: "#3BAF7A", greenBg: "#EDF7F1", greenBorder: "#B5DECA",
+  red: "#E05656", redBg: "#FDECEC",
+  orange: "#D4923A", orangeBg: "#FDF3E8",
+  blue: "#3F3D6E", blueBg: "#EEEDF5", blueBorder: "#9B97C4",
+  primary: "#2D2B55", primaryMid: "#3F3D6E", primaryLight: "#9B97C4",
+  accentDark: "#3A9480",
 };
 // ── Tooltip ──
 function Tip({ text }) {
   const [show, setShow] = useState(false);
   return (
     <span className="relative inline-block ml-1.5 cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(!show)}>
-      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ background: "#E8DDD3", color: "#6B5B4F", fontSize: 10, fontWeight: 800 }}>?</span>
-      {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#3C3226", color: "#F5F0EB" }}>{text}</span>}
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ background: "#EEEDF5", color: "#3F3D6E", fontSize: 10, fontWeight: 800 }}>?</span>
+      {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#2D2B55", color: "#E0DEF0" }}>{text}</span>}
     </span>
   );
 }
@@ -96,62 +98,62 @@ function generatePDFContent(result, data, recommendations, scenarios) {
   const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const scenarioRows = scenarios.slice(0, 4).map(s => `
     <tr><td style="padding:6px 10px;border-bottom:1px solid #E8E0D8">${s.label} (${s.year})</td>
-    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#B5494B">${fmt(s.totalImpot)}</td>
-    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#5B8C5A">${fmt(s.netVendeur)}</td></tr>`).join("");
+    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#E05656">${fmt(s.totalImpot)}</td>
+    <td style="padding:6px 10px;border-bottom:1px solid #E8E0D8;text-align:right;font-weight:600;color:#3BAF7A">${fmt(s.netVendeur)}</td></tr>`).join("");
 
   const recoRows = recommendations.map(r => `
-    <div style="margin-bottom:10px;padding:10px 14px;background:#F5EFE3;border-radius:8px;border-left:3px solid #8B6E3A">
-      <strong>${r.icon} ${r.title}</strong><br/><span style="font-size:12px;color:#8B7E6F">${r.text}</span>
+    <div style="margin-bottom:10px;padding:10px 14px;background:#F5EFE3;border-radius:8px;border-left:3px solid #56CBAD">
+      <strong>${r.icon} ${r.title}</strong><br/><span style="font-size:12px;color:#6E6B8A">${r.text}</span>
     </div>`).join("");
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#2C2418;font-size:13px;line-height:1.5}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#1E1C3A;font-size:13px;line-height:1.5}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head>
 <body style="padding:40px">
-<div style="border-bottom:3px solid #3C3226;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end">
-  <div><div style="font-family:'DM Serif Display',serif;font-size:24px;color:#3C3226">Rapport de plus-value immobilière</div>
-  <div style="font-size:12px;color:#8B7E6F;margin-top:4px">Simulation générée le ${date}</div></div>
-  <div style="font-size:11px;color:#8B7E6F;text-align:right">fiscimmo.fr<br/>Simulateur gratuit 2026</div>
+<div style="border-bottom:3px solid #2D2B55;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div style="font-family:'DM Serif Display',serif;font-size:24px;color:#2D2B55">Rapport de plus-value immobilière</div>
+  <div style="font-size:12px;color:#6E6B8A;margin-top:4px">Simulation générée le ${date}</div></div>
+  <div style="font-size:11px;color:#6E6B8A;text-align:right">fiscimmo.fr<br/>Simulateur gratuit 2026</div>
 </div>
 <div style="display:flex;gap:16px;margin-bottom:24px">
-  <div style="flex:1;background:#FBEAEA;border-radius:10px;padding:16px;text-align:center">
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#B5494B;font-weight:700">Impôt total</div>
-    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#B5494B;margin-top:4px">${fmt(result.totalImpot)}</div>
-    <div style="font-size:11px;color:#8B7E6F">Taux effectif : ${fmtPct(result.tauxEffectif)}</div>
+  <div style="flex:1;background:#FDECEC;border-radius:10px;padding:16px;text-align:center">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#E05656;font-weight:700">Impôt total</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#E05656;margin-top:4px">${fmt(result.totalImpot)}</div>
+    <div style="font-size:11px;color:#6E6B8A">Taux effectif : ${fmtPct(result.tauxEffectif)}</div>
   </div>
-  <div style="flex:1;background:#EDF5EC;border-radius:10px;padding:16px;text-align:center">
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#5B8C5A;font-weight:700">Net vendeur</div>
-    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#5B8C5A;margin-top:4px">${fmt(result.netVendeur)}</div>
-    <div style="font-size:11px;color:#8B7E6F">Après déduction de l'impôt</div>
+  <div style="flex:1;background:#EDF7F1;border-radius:10px;padding:16px;text-align:center">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#3BAF7A;font-weight:700">Net vendeur</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#3BAF7A;margin-top:4px">${fmt(result.netVendeur)}</div>
+    <div style="font-size:11px;color:#6E6B8A">Après déduction de l'impôt</div>
   </div>
 </div>
-<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Détail du calcul</div>
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#2D2B55">Détail du calcul</div>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px">
-<tr style="background:#F5F0EB"><td style="padding:6px 10px;font-weight:600">Prix de vente</td><td style="padding:6px 10px;text-align:right">${fmt(data.prixVente)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F"></td></tr>
-<tr><td style="padding:6px 10px">− Frais de cession</td><td style="padding:6px 10px;text-align:right">− ${fmt(data.fraisCession)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F"></td></tr>
-<tr style="background:#F5F0EB;font-weight:700"><td style="padding:6px 10px">= Prix de vente corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixVenteCorrige)}</td><td></td></tr>
+<tr style="background:#E0DEF0"><td style="padding:6px 10px;font-weight:600">Prix de vente</td><td style="padding:6px 10px;text-align:right">${fmt(data.prixVente)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A"></td></tr>
+<tr><td style="padding:6px 10px">− Frais de cession</td><td style="padding:6px 10px;text-align:right">− ${fmt(data.fraisCession)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A"></td></tr>
+<tr style="background:#E0DEF0;font-weight:700"><td style="padding:6px 10px">= Prix de vente corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixVenteCorrige)}</td><td></td></tr>
 <tr><td style="padding:6px 10px">Prix d'achat</td><td style="padding:6px 10px;text-align:right">${fmt(data.prixAchat)}</td><td></td></tr>
-<tr style="background:#F5F0EB"><td style="padding:6px 10px">+ Frais d'acquisition</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.fraisAcqui)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">${data.fraisMode === "forfait" ? "Forfait 7,5%" : "Réels"}</td></tr>
-<tr><td style="padding:6px 10px">+ Travaux</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.travaux)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">${data.travauxMode === "forfait" ? "Forfait 15%" : data.travauxMode === "reel" ? "Factures" : "Aucun"}</td></tr>
-<tr style="background:#F5F0EB;font-weight:700"><td style="padding:6px 10px">= Prix d'achat corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixAchatCorrige)}</td><td></td></tr>
-<tr style="border-top:2px solid #3C3226;font-weight:700"><td style="padding:10px 10px">Plus-value brute</td><td style="padding:10px 10px;text-align:right">${fmt(result.pvBrute)}</td><td style="padding:10px 10px;font-size:11px;color:#8B7E6F">Détention : ${result.years} ans</td></tr>
-<tr style="background:#F5F0EB"><td style="padding:6px 10px">Abattement IR (${fmtPct(result.abatIRPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette IR : ${fmt(result.pvNetIR)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">Exonération à 22 ans</td></tr>
-<tr><td style="padding:6px 10px;font-weight:600">Impôt sur le revenu (19%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.impotIR)}</td><td></td></tr>
-<tr style="background:#F5F0EB"><td style="padding:6px 10px">Abattement PS (${fmtPct(result.abatPSPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette PS : ${fmt(result.pvNetPS)}</td><td style="padding:6px 10px;font-size:11px;color:#8B7E6F">Exonération à 30 ans</td></tr>
-<tr><td style="padding:6px 10px;font-weight:600">Prélèvements sociaux (17,2%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.impotPS)}</td><td></td></tr>
-${result.surtaxe > 0 ? `<tr style="background:#FBEAEA"><td style="padding:6px 10px;font-weight:600">Surtaxe (PV nette > 50K€)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#B5494B">${fmt(result.surtaxe)}</td><td></td></tr>` : ""}
-<tr style="border-top:2px solid #3C3226;font-weight:700;font-size:15px"><td style="padding:10px">TOTAL IMPÔT</td><td style="padding:10px;text-align:right;color:#B5494B">${fmt(result.totalImpot)}</td><td></td></tr>
+<tr style="background:#E0DEF0"><td style="padding:6px 10px">+ Frais d'acquisition</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.fraisAcqui)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A">${data.fraisMode === "forfait" ? "Forfait 7,5%" : "Réels"}</td></tr>
+<tr><td style="padding:6px 10px">+ Travaux</td><td style="padding:6px 10px;text-align:right">+ ${fmt(data.travaux)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A">${data.travauxMode === "forfait" ? "Forfait 15%" : data.travauxMode === "reel" ? "Factures" : "Aucun"}</td></tr>
+<tr style="background:#E0DEF0;font-weight:700"><td style="padding:6px 10px">= Prix d'achat corrigé</td><td style="padding:6px 10px;text-align:right">${fmt(result.prixAchatCorrige)}</td><td></td></tr>
+<tr style="border-top:2px solid #2D2B55;font-weight:700"><td style="padding:10px 10px">Plus-value brute</td><td style="padding:10px 10px;text-align:right">${fmt(result.pvBrute)}</td><td style="padding:10px 10px;font-size:11px;color:#6E6B8A">Détention : ${result.years} ans</td></tr>
+<tr style="background:#E0DEF0"><td style="padding:6px 10px">Abattement IR (${fmtPct(result.abatIRPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette IR : ${fmt(result.pvNetIR)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A">Exonération à 22 ans</td></tr>
+<tr><td style="padding:6px 10px;font-weight:600">Impôt sur le revenu (19%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#E05656">${fmt(result.impotIR)}</td><td></td></tr>
+<tr style="background:#E0DEF0"><td style="padding:6px 10px">Abattement PS (${fmtPct(result.abatPSPct)})</td><td style="padding:6px 10px;text-align:right">→ PV nette PS : ${fmt(result.pvNetPS)}</td><td style="padding:6px 10px;font-size:11px;color:#6E6B8A">Exonération à 30 ans</td></tr>
+<tr><td style="padding:6px 10px;font-weight:600">Prélèvements sociaux (17,2%)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#E05656">${fmt(result.impotPS)}</td><td></td></tr>
+${result.surtaxe > 0 ? `<tr style="background:#FDECEC"><td style="padding:6px 10px;font-weight:600">Surtaxe (PV nette > 50K€)</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#E05656">${fmt(result.surtaxe)}</td><td></td></tr>` : ""}
+<tr style="border-top:2px solid #2D2B55;font-weight:700;font-size:15px"><td style="padding:10px">TOTAL IMPÔT</td><td style="padding:10px;text-align:right;color:#E05656">${fmt(result.totalImpot)}</td><td></td></tr>
 </table>
 ${scenarios.length > 0 ? `
-<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Comparaison temporelle</div>
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#2D2B55">Comparaison temporelle</div>
 <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px">
-<tr style="background:#3C3226;color:#F5F0EB"><th style="padding:8px 10px;text-align:left">Scénario</th><th style="padding:8px 10px;text-align:right">Impôt</th><th style="padding:8px 10px;text-align:right">Net vendeur</th></tr>
+<tr style="background:#2D2B55;color:#E0DEF0"><th style="padding:8px 10px;text-align:left;font-weight:600">Scénario</th><th style="padding:8px 10px;text-align:right">Impôt</th><th style="padding:8px 10px;text-align:right">Net vendeur</th></tr>
 ${scenarioRows}
 </table>` : ""}
 ${recommendations.length > 0 ? `
-<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#3C3226">Pistes d'optimisation</div>
+<div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#2D2B55">Pistes d'optimisation</div>
 ${recoRows}` : ""}
-<div style="margin-top:30px;padding:14px;background:#F5F0EB;border-radius:8px;font-size:11px;color:#8B7E6F;line-height:1.6">
+<div style="margin-top:30px;padding:14px;background:#E0DEF0;border-radius:8px;font-size:11px;color:#6E6B8A;line-height:1.6">
 <strong>Sources légales :</strong> Art. 150 U à 150 VH du CGI • Abattements : art. 150 VC • Surtaxe : art. 1609 nonies G • Taux IR : 19% (art. 200 B) • PS : 17,2%<br/>
 <strong>Avertissement :</strong> Simulation indicative à but pédagogique. Ne constitue pas un conseil fiscal. Consultez votre notaire pour un calcul définitif.
 </div>
@@ -191,7 +193,7 @@ function EmailModal({ onClose, onSubmit }) {
               onKeyDown={e => e.key === "Enter" && handleSubmit()}
               style={{ width: "100%", padding: "12px 16px", border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 15, outline: "none", fontFamily: "'DM Sans', sans-serif", marginBottom: 12, boxSizing: "border-box" }} />
             <button onClick={handleSubmit}
-              style={{ width: "100%", padding: "12px 0", background: "#3C3226", color: "#F5F0EB", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              style={{ width: "100%", padding: "12px 0", background: "#2D2B55", color: "#E0DEF0", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
               Recevoir mon rapport gratuit
             </button>
             <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", marginTop: 10 }}>Pas de spam. Données non partagées. Désabonnement en 1 clic.</div>
@@ -248,10 +250,10 @@ export default function PlusValueSimulator() {
     return getRecommendations(result, { prixAchat: pa, travaux: travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0 });
   }, [result, pa, travauxMode, travauxReels, isRP]);
   const pieData = result && !result.exonere && result.totalImpot > 0 ? [
-    { name: "Net vendeur", value: Math.max(0, result.netVendeur), fill: C.green },
-    { name: "IR (19%)", value: result.impotIR, fill: C.orange },
-    { name: "PS (17,2%)", value: result.impotPS, fill: "#8B6E5A" },
-    ...(result.surtaxe > 0 ? [{ name: "Surtaxe", value: result.surtaxe, fill: C.red }] : []),
+    { name: "Net vendeur", value: Math.max(0, result.netVendeur), fill: "#3BAF7A" },
+    { name: "IR (19%)", value: result.impotIR, fill: "#D4923A" },
+    { name: "PS (17,2%)", value: result.impotPS, fill: "#6E6B8A" },
+    ...(result.surtaxe > 0 ? [{ name: "Surtaxe", value: result.surtaxe, fill: "#E05656" }] : []),
   ] : [];
   const barData = scenarios.map(s => ({ name: s.label, impot: Math.round(s.totalImpot ?? 0), net: Math.round(s.netVendeur ?? 0) }));
   // PDF Export
@@ -275,11 +277,11 @@ export default function PlusValueSimulator() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
       {showEmailModal && <EmailModal onClose={() => setShowEmailModal(false)} onSubmit={handleEmailSubmit} />}
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", padding: "44px 24px 40px", color: "#F5F0EB" }}>
+      <div style={{ background: "linear-gradient(135deg, #2D2B55 0%, #3F3D6E 100%)", padding: "44px 24px 40px", color: "#E0DEF0" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.55, marginBottom: 12 }}>Simulation plus-value immobilière — Gratuit 2026</div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15 }}>Simulation de plus-value immobilière</h1>
-          <p style={{ fontSize: 16, opacity: 0.75, marginTop: 12, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#9B97C4", marginBottom: 12 }}>Simulation plus-value immobilière — Gratuit 2026</div>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15, color: "#E0DEF0" }}>Simulation de plus-value immobilière</h1>
+          <p style={{ fontSize: 16, color: "#9B97C4", marginTop: 12, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
             Estimez votre impôt sur la plus-value en quelques secondes. Abattements pour durée de détention, surtaxe, résidence principale : toutes les règles fiscales 2026 appliquées automatiquement.
           </p>
           {/* Réassurance badges */}
@@ -290,8 +292,8 @@ export default function PlusValueSimulator() {
               { icon: "🔒", label: "100% gratuit, sans inscription" },
               { icon: "📄", label: "Export PDF inclus" },
             ].map((b, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 500 }}>
-                <span>{b.icon}</span><span style={{ opacity: 0.9 }}>{b.label}</span>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 500, color: "#E0DEF0" }}>
+                <span>{b.icon}</span><span>{b.label}</span>
               </div>
             ))}
           </div>
@@ -326,7 +328,7 @@ export default function PlusValueSimulator() {
               <label style={labelStyle}>Frais d'acquisition <Tip text="Forfait 7,5% (sans justificatif) ou montant réel des frais de notaire." /></label>
               <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                 {["forfait", "reel"].map(m => (
-                  <button key={m} onClick={() => setFraisMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${fraisMode === m ? C.accent : C.border}`, borderRadius: 6, cursor: "pointer", background: fraisMode === m ? C.accentBg : C.card, color: fraisMode === m ? C.accent : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                  <button key={m} onClick={() => setFraisMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${fraisMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: fraisMode === m ? C.cardAlt : C.card, color: fraisMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
                     {m === "forfait" ? "Forfait 7,5%" : "Réels"}
                   </button>
                 ))}
@@ -338,7 +340,7 @@ export default function PlusValueSimulator() {
               <label style={labelStyle}>Travaux <Tip text="Forfait 15% si détention > 5 ans (sans justificatif) ou réels avec factures d'entreprises." /></label>
               <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
                 {["forfait", "reel", "aucun"].map(m => (
-                  <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m ? C.accent : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m ? C.accentBg : C.card, color: travauxMode === m ? C.accent : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                  <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m ? C.cardAlt : C.card, color: travauxMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
                     {m === "forfait" ? "Forfait 15%" : m === "reel" ? "Réels" : "Aucun"}
                   </button>
                 ))}
@@ -373,7 +375,7 @@ export default function PlusValueSimulator() {
                   <div style={{ display: "flex", gap: 4, paddingLeft: 8 }}>
                     {[{ id: "result", label: "Résultat" }, { id: "scenarios", label: "Scénarios" }, { id: "detail", label: "Détail calcul" }].map(tab => (
                       <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                        style={{ padding: "10px 18px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: "10px 10px 0 0", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: activeTab === tab.id ? C.card : "transparent", color: activeTab === tab.id ? C.text : C.textMuted, borderBottom: activeTab === tab.id ? `2px solid ${C.accent}` : "none" }}>
+                        style={{ padding: "10px 18px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: "10px 10px 0 0", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", background: activeTab === tab.id ? C.card : "transparent", color: activeTab === tab.id ? C.text : C.textMuted, borderBottom: activeTab === tab.id ? `2px solid ${C.accent}` : "2px solid transparent" }}>
                         {tab.label}
                       </button>
                     ))}
@@ -383,7 +385,7 @@ export default function PlusValueSimulator() {
                       <button onClick={handleExportPDF} style={{ padding: "7px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${C.border}`, borderRadius: 8, cursor: "pointer", background: C.card, color: C.text, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
                         📄 Imprimer / PDF
                       </button>
-                      <button onClick={() => setShowEmailModal(true)} style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 8, cursor: "pointer", background: "#3C3226", color: "#F5F0EB", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                      <button onClick={() => setShowEmailModal(true)} style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, border: "none", borderRadius: 8, cursor: "pointer", background: "#2D2B55", color: "#E0DEF0", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
                         ✉️ Recevoir par email
                       </button>
                     </div>
@@ -437,15 +439,15 @@ export default function PlusValueSimulator() {
                           {/* Abattement bars */}
                           <div>
                             {[
-                              { label: "Abattement IR", pct: result.abatIRPct, target: 22, color: C.accent },
-                              { label: "Abattement PS", pct: result.abatPSPct, target: 30, color: "#8B6E5A" },
+                              { label: "Abattement IR", pct: result.abatIRPct, target: 22, color: "#56CBAD" },
+                              { label: "Abattement PS", pct: result.abatPSPct, target: 30, color: "#3F3D6E" },
                             ].map((b, i) => (
                               <div key={i} style={{ marginBottom: i === 0 ? 14 : 0 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, marginBottom: 5 }}>
                                   <span>{b.label} : {fmtPct(b.pct)}</span>
                                   <span style={{ color: b.pct >= 100 ? C.green : C.textMuted }}>{b.pct >= 100 ? "Exonéré ✓" : `Exonération dans ${Math.max(0, b.target - result.years)} ans`}</span>
                                 </div>
-                                <div style={{ height: 8, background: C.cardAlt, borderRadius: 4, overflow: "hidden" }}>
+                                <div style={{ height: 8, background: "#EEEDF5", borderRadius: 4, overflow: "hidden" }}>
                                   <div style={{ width: `${Math.min(100, b.pct)}%`, height: "100%", background: b.pct >= 100 ? C.green : b.color, borderRadius: 4, transition: "width 0.6s ease" }} />
                                 </div>
                               </div>
@@ -534,7 +536,7 @@ export default function PlusValueSimulator() {
                     <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: C.accent, marginBottom: 12, paddingLeft: 4 }}>Pistes d'optimisation</div>
                     <div style={{ display: "grid", gap: 10 }}>
                       {recommendations.map((rec, i) => (
-                        <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px", borderLeft: `4px solid ${rec.type === "alert" ? C.red : rec.type === "timing" ? C.accent : C.green}` }}>
+                        <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px", borderLeft: `4px solid ${rec.type === "alert" ? "#E05656" : rec.type === "timing" ? "#56CBAD" : "#3BAF7A"}` }}>
                           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                             <span style={{ fontSize: 20 }}>{rec.icon}</span>
                             <div>
@@ -556,19 +558,19 @@ export default function PlusValueSimulator() {
                         <CTABlock
                           icon="🎯" title="Optimisez votre fiscalité immobilière"
                           desc={`Vous payez ${fmt(result.totalImpot)} d'impôt. Un conseiller patrimonial peut vous aider à réduire ce montant via des stratégies légales.`}
-                          cta="Bilan gratuit" color={C.accent} bgColor={C.accentBg} borderColor={C.accentLight}
+                          cta="Bilan gratuit" color="#3F3D6E" bgColor="rgba(45,43,85,0.06)" borderColor="#3F3D6E"
                         />
                       )}
                       <CTABlock
                         icon="🏠" title="Estimez la valeur réelle de votre bien"
                         desc="Obtenez une estimation gratuite basée sur les transactions récentes dans votre quartier."
-                        cta="Estimer" color={C.blue} bgColor={C.blueBg} borderColor={C.blueBorder}
+                        cta="Estimer" color="#56CBAD" bgColor="rgba(86,203,173,0.06)" borderColor="#56CBAD"
                       />
                       {result.netVendeur > 50000 && (
                         <CTABlock
                           icon="📈" title="Réinvestissez intelligemment"
                           desc={`${fmt(result.netVendeur)} à placer ? Comparez les SCPI, l'assurance-vie et les placements immobiliers pour faire fructifier votre capital.`}
-                          cta="Comparer" color={C.green} bgColor={C.greenBg} borderColor={C.greenBorder}
+                          cta="Comparer" color="#3BAF7A" bgColor="rgba(59,175,122,0.06)" borderColor="#3BAF7A"
                         />
                       )}
                     </div>
@@ -576,13 +578,13 @@ export default function PlusValueSimulator() {
                 )}
                 {/* ═══ EMAIL CAPTURE BANNER ═══ */}
                 {result.pvBrute > 0 && !emailCaptured && (
-                  <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", borderRadius: 14, padding: "24px 20px", marginBottom: 20, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}
+                  <div style={{ background: "linear-gradient(135deg, #2D2B55 0%, #3F3D6E 100%)", borderRadius: 14, padding: "24px 20px", marginBottom: 20, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}
                     onClick={() => setShowEmailModal(true)} role="button" tabIndex={0}>
                     <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#F5F0EB", marginBottom: 6 }}>Recevez votre rapport complet</div>
-                      <div style={{ fontSize: 13, color: "#B5A898", lineHeight: 1.5 }}>PDF détaillé avec calcul ligne par ligne, comparaison temporelle, pistes d'optimisation et références légales. À montrer à votre notaire.</div>
+                      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#E0DEF0", marginBottom: 6 }}>Recevez votre rapport complet</div>
+                      <div style={{ fontSize: 13, color: "#9B97C4", lineHeight: 1.5 }}>PDF détaillé avec calcul ligne par ligne, comparaison temporelle, pistes d'optimisation et références légales. À montrer à votre notaire.</div>
                     </div>
-                    <button style={{ padding: "12px 24px", background: C.accentLight, color: "#3C3226", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>
+                    <button style={{ padding: "12px 24px", background: "#56CBAD", color: "#1E1C3A", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}>
                       ✉️ Recevoir gratuitement
                     </button>
                   </div>
@@ -659,7 +661,7 @@ export default function PlusValueSimulator() {
           <div style={{ overflowX: "auto", marginBottom: 48 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 480 }}>
               <thead>
-                <tr style={{ background: "#3C3226", color: "#F5F0EB" }}>
+                <tr style={{ background: "#2D2B55", color: "#E0DEF0" }}>
                   <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600 }}>Durée de détention</th>
                   <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement IR / an</th>
                   <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement PS / an</th>
@@ -680,7 +682,7 @@ export default function PlusValueSimulator() {
                     <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[1]}</td>
                     <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[2]}</td>
                     <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: C.accent }}>{row[3]}</td>
-                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: "#8B6E5A" }}>{row[4]}</td>
+                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: "#6E6B8A" }}>{row[4]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -736,10 +738,10 @@ export default function PlusValueSimulator() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{ background: "#3C3226", padding: "20px 24px", textAlign: "center" }}>
+      <div style={{ background: "#2D2B55", padding: "20px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <div style={{ fontSize: 13, color: "#B5A898", fontFamily: "'DM Serif Display', serif" }}>calculplusvalue.fr</div>
-          <div style={{ fontSize: 11, color: "#7A6A58" }}>© 2026 — Simulateur gratuit de plus-value immobilière — Simulation indicative, non contractuelle</div>
+          <div style={{ fontSize: 13, color: "#9B97C4", fontFamily: "'DM Serif Display', serif" }}>calculplusvalue.fr</div>
+          <div style={{ fontSize: 11, color: "#6E6B8A" }}>© 2026 — Simulateur gratuit de plus-value immobilière — Simulation indicative, non contractuelle</div>
         </div>
       </div>
     </div>
