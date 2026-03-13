@@ -276,11 +276,21 @@ export default function PlusValueSimulator() {
     if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
   }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios]);
   // Email capture
-  const handleEmailSubmit = useCallback((email) => {
+  const handleEmailSubmit = useCallback(async (email: string) => {
     setEmailCaptured(true);
-    // In production: POST to your backend/n8n webhook
-    console.log("Email captured:", email);
-  }, []);
+    if (!result) return;
+    const data = { prixAchat: pa, prixVente: pv, fraisAcqui, travaux: travauxVal, fraisCession: fc, fraisMode, travauxMode };
+    const htmlContent = generatePDFContent(result, data, recommendations, scenarios);
+    try {
+      await fetch("/api/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, htmlContent }),
+      });
+    } catch (err) {
+      console.error("Erreur envoi email:", err);
+    }
+  }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios]);
   const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
   const labelStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "flex", alignItems: "center" };
   return (
