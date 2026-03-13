@@ -124,7 +124,7 @@ function generatePDFContent(result, data, recommendations, scenarios) {
 <div style="border-bottom:3px solid #2D2B55;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end">
   <div><div style="font-family:'DM Serif Display',serif;font-size:24px;color:#2D2B55">Rapport de plus-value immobilière</div>
   <div style="font-size:12px;color:#6E6B8A;margin-top:4px">Simulation générée le ${date}</div></div>
-  <div style="font-size:11px;color:#6E6B8A;text-align:right">fiscimmo.fr<br/>Simulateur gratuit 2026</div>
+  <div style="font-size:11px;color:#6E6B8A;text-align:right">calculplusvalue.fr<br/>Simulateur gratuit 2026</div>
 </div>
 <div style="display:flex;gap:16px;margin-bottom:24px">
   <div style="flex:1;background:#FDECEC;border-radius:10px;padding:16px;text-align:center">
