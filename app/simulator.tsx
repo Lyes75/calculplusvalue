@@ -4,19 +4,19 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Respon
 // ── Tax Logic ──
 const IR_RATE = 0.19;
 const PS_RATE = 0.172;
-function getAbatIR(years) {
+function getAbatIR(years: number) {
   if (years < 6) return 0;
   if (years <= 21) return (years - 5) * 6;
   return 100;
 }
-function getAbatPS(years) {
+function getAbatPS(years: number) {
   if (years < 6) return 0;
   if (years <= 21) return (years - 5) * 1.65;
   if (years === 22) return ((21 - 5) * 1.65) + 1.60;
   if (years <= 30) return ((21 - 5) * 1.65) + 1.60 + ((years - 22) * 9);
   return 100;
 }
-function getSurtax(pvNetIR) {
+function getSurtax(pvNetIR: number) {
   if (pvNetIR <= 50000) return 0;
   if (pvNetIR <= 100000) return pvNetIR * 0.02;
   if (pvNetIR <= 150000) return pvNetIR * 0.03;
@@ -24,15 +24,15 @@ function getSurtax(pvNetIR) {
   if (pvNetIR <= 250000) return pvNetIR * 0.05;
   return pvNetIR * 0.06;
 }
-function computePV(prixAchat, prixVente, dateAchat, dateVente, fraisAcqui, travaux, fraisCession) {
+function computePV(prixAchat: number, prixVente: number, dateAchat: Date, dateVente: Date, fraisAcqui: number, travaux: number, fraisCession: number) {
   if (!prixAchat || !prixVente || !dateAchat) return null;
-  const dVente = dateVente || new Date();
-  const dAchat = new Date(dateAchat);
-  const years = Math.floor((dVente - dAchat) / (365.25 * 24 * 60 * 60 * 1000));
+  const dVente: Date = dateVente || new Date();
+  const dAchat: Date = new Date(dateAchat);
+  const years = Math.floor((dVente.getTime() - dAchat.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
   const prixAchatCorrige = prixAchat + fraisAcqui + travaux;
   const prixVenteCorrige = prixVente - fraisCession;
   const pvBrute = Math.max(0, prixVenteCorrige - prixAchatCorrige);
-  if (pvBrute === 0) return { pvBrute: 0, years, abatIRPct: 0, abatPSPct: 0, pvNetIR: 0, pvNetPS: 0, impotIR: 0, impotPS: 0, surtaxe: 0, totalImpot: 0, netVendeur: prixVente - fraisCession, tauxEffectif: 0, prixAchatCorrige, prixVenteCorrige };
+  if (pvBrute === 0) return { pvBrute: 0, years, abatIRPct: 0, abatPSPct: 0, pvNetIR: 0, pvNetPS: 0, impotIR: 0, impotPS: 0, surtaxe: 0, totalImpot: 0, netVendeur: prixVente - fraisCession, tauxEffectif: 0, prixAchatCorrige, prixVenteCorrige, exonere: false };
   const abatIRPct = Math.min(100, getAbatIR(years));
   const abatPSPct = Math.min(100, getAbatPS(years));
   const pvNetIR = pvBrute * (1 - abatIRPct / 100);
@@ -41,10 +41,10 @@ function computePV(prixAchat, prixVente, dateAchat, dateVente, fraisAcqui, trava
   const impotPS = pvNetPS * PS_RATE;
   const surtaxe = getSurtax(pvNetIR);
   const totalImpot = impotIR + impotPS + surtaxe;
-  return { pvBrute, years, abatIRPct, abatPSPct, pvNetIR, pvNetPS, impotIR, impotPS, surtaxe, totalImpot, netVendeur: prixVenteCorrige - totalImpot, tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0, prixAchatCorrige, prixVenteCorrige };
+  return { pvBrute, years, abatIRPct, abatPSPct, pvNetIR, pvNetPS, impotIR, impotPS, surtaxe, totalImpot, netVendeur: prixVenteCorrige - totalImpot, tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0, prixAchatCorrige, prixVenteCorrige, exonere: false };
 }
-function fmt(n) { return (n === undefined || n === null || isNaN(n)) ? "0 €" : Math.round(n).toLocaleString("fr-FR") + " €"; }
-function fmtPct(n) { return (n === undefined || n === null || isNaN(n)) ? "0%" : n.toFixed(1).replace(".", ",") + "%"; }
+function fmt(n: number) { return (n === undefined || n === null || isNaN(n)) ? "0 €" : Math.round(n).toLocaleString("fr-FR") + " €"; }
+function fmtPct(n: number) { return (n === undefined || n === null || isNaN(n)) ? "0%" : n.toFixed(1).replace(".", ",") + "%"; }
 // ── Colors ──
 const C = {
   bg: "#FAF7F3", card: "#FFFFFF", cardAlt: "#F5F0EB",
@@ -69,7 +69,7 @@ function Tip({ text }) {
 // ── Recommendation Engine ──
 function getRecommendations(result, data) {
   if (!result || result.pvBrute === 0) return [];
-  const recs = [];
+  const recs: { type: string; icon: string; title: string; text: string; impact: number }[] = [];
   if (result.years >= 18 && result.years < 22) {
     const yl = 22 - result.years;
     recs.push({ type: "timing", icon: "⏳", title: `${yl} an${yl > 1 ? "s" : ""} avant l'exonération IR`, text: `En attendant ${new Date().getFullYear() + yl} pour vendre, vous économiseriez ${fmt(result.impotIR)} d'impôt sur le revenu.`, impact: result.impotIR });
@@ -227,12 +227,12 @@ export default function PlusValueSimulator() {
   const fc = parseFloat(fraisCession) || 0;
   const fraisAcqui = fraisMode === "forfait" ? pa * 0.075 : (parseFloat(fraisReels) || 0);
   const da = dateAchat ? new Date(dateAchat) : null;
-  const years = da ? Math.floor((new Date() - da) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
+  const years = da ? Math.floor((new Date().getTime() - da.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
   const travauxVal = travauxMode === "forfait" && years >= 5 ? pa * 0.15 : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
   const isRP = situation === "principale";
   const result = useMemo(() => {
     if (!pa || !pv || !da) return null;
-    if (isRP) return { pvBrute: Math.max(0, pv - fc - pa - fraisAcqui - travauxVal), years, exonere: true, totalImpot: 0, netVendeur: pv - fc, tauxEffectif: 0, prixAchatCorrige: pa + fraisAcqui + travauxVal, prixVenteCorrige: pv - fc };
+    if (isRP) return { pvBrute: Math.max(0, pv - fc - pa - fraisAcqui - travauxVal), years, exonere: true, totalImpot: 0, netVendeur: pv - fc, tauxEffectif: 0, prixAchatCorrige: pa + fraisAcqui + travauxVal, prixVenteCorrige: pv - fc, abatIRPct: 0, abatPSPct: 0, pvNetIR: 0, pvNetPS: 0, impotIR: 0, impotPS: 0, surtaxe: 0 };
     return computePV(pa, pv, da, new Date(), fraisAcqui, travauxVal, fc);
   }, [pa, pv, da, fraisAcqui, travauxVal, fc, isRP, years]);
   const scenarios = useMemo(() => {
@@ -253,7 +253,7 @@ export default function PlusValueSimulator() {
     { name: "PS (17,2%)", value: result.impotPS, fill: "#8B6E5A" },
     ...(result.surtaxe > 0 ? [{ name: "Surtaxe", value: result.surtaxe, fill: C.red }] : []),
   ] : [];
-  const barData = scenarios.map(s => ({ name: s.label, impot: Math.round(s.totalImpot), net: Math.round(s.netVendeur) }));
+  const barData = scenarios.map(s => ({ name: s.label, impot: Math.round(s.totalImpot ?? 0), net: Math.round(s.netVendeur ?? 0) }));
   // PDF Export
   const handleExportPDF = useCallback(() => {
     if (!result || result.exonere) return;
@@ -268,8 +268,8 @@ export default function PlusValueSimulator() {
     // In production: POST to your backend/n8n webhook
     console.log("Email captured:", email);
   }, []);
-  const inputStyle = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
-  const labelStyle = { fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "flex", alignItems: "center" };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
+  const labelStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "flex", alignItems: "center" };
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif", background: C.bg, minHeight: "100vh", color: C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
@@ -461,9 +461,9 @@ export default function PlusValueSimulator() {
                           <div key={i} style={{ background: i === 0 ? C.accentBg : C.cardAlt, borderRadius: 10, padding: 12, textAlign: "center", border: i === 0 ? `1.5px solid ${C.accentLight}` : `1px solid ${C.border}` }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, marginBottom: 3 }}>{s.label}</div>
                             <div style={{ fontSize: 11, color: C.textMuted }}>Impôt</div>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: C.red }}>{fmt(s.totalImpot)}</div>
-                            {i > 0 && s.totalImpot < scenarios[0].totalImpot && (
-                              <div style={{ fontSize: 11, color: C.green, fontWeight: 600, marginTop: 2 }}>−{fmt(scenarios[0].totalImpot - s.totalImpot)}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: C.red }}>{fmt(s.totalImpot ?? 0)}</div>
+                            {i > 0 && (s.totalImpot ?? 0) < (scenarios[0].totalImpot ?? 0) && (
+                              <div style={{ fontSize: 11, color: C.green, fontWeight: 600, marginTop: 2 }}>−{fmt((scenarios[0].totalImpot ?? 0) - (s.totalImpot ?? 0))}</div>
                             )}
                           </div>
                         ))}
