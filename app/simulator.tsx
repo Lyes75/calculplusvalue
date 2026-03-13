@@ -62,7 +62,7 @@ const C = {
 function Tip({ text }) {
   const [show, setShow] = useState(false);
   return (
-    <span className="relative inline-block ml-2 cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(!show)}>
+    <span className="relative inline-block ml-3 cursor-help" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(!show)}>
       <span className="inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ background: "#EEEDF5", color: "#3F3D6E", fontSize: 10, fontWeight: 800 }}>?</span>
       {show && <span className="absolute z-50 bottom-6 left-1/2 -translate-x-1/2 w-64 p-3 rounded-lg text-xs leading-relaxed shadow-xl" style={{ background: "#2D2B55", color: "#E0DEF0" }}>{text}</span>}
     </span>
