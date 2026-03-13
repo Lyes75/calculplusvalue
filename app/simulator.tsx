@@ -281,7 +281,7 @@ export default function PlusValueSimulator() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           {/* Logo */}
           <div style={{ marginBottom: 28 }}>
-            <img src="/logo.svg" alt="calculplusvalue.fr — Simulateur de plus-value immobilière" style={{ height: 48, width: "auto", display: "block" }} />
+            <img src="/logo.png" alt="calculplusvalue.fr — Simulateur de plus-value immobilière" style={{ height: 48, width: "auto", display: "block" }} />
           </div>
           <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#9B97C4", marginBottom: 12 }}>Simulation plus-value immobilière — Gratuit 2026</div>
           <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15, color: "#E0DEF0" }}>Simulation de plus-value immobilière</h1>
