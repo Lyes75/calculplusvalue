@@ -277,8 +277,8 @@ export default function PlusValueSimulator() {
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg, #3C3226 0%, #5A4B3A 100%)", padding: "44px 24px 40px", color: "#F5F0EB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.55, marginBottom: 12 }}>Simulateur gratuit 2026 — Barèmes à jour</div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15 }}>Calcul de la plus-value immobilière</h1>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", opacity: 0.55, marginBottom: 12 }}>Simulation plus-value immobilière — Gratuit 2026</div>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15 }}>Simulation de plus-value immobilière</h1>
           <p style={{ fontSize: 16, opacity: 0.75, marginTop: 12, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
             Estimez votre impôt sur la plus-value en quelques secondes. Abattements pour durée de détention, surtaxe, résidence principale : toutes les règles fiscales 2026 appliquées automatiquement.
           </p>
@@ -619,9 +619,9 @@ export default function PlusValueSimulator() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
           {/* Comment ça marche */}
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Comment calculer la plus-value immobilière ?</h2>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Comment fonctionne cette simulation de plus-value immobilière ?</h2>
           <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.7, marginBottom: 32, maxWidth: 720 }}>
-            La plus-value immobilière est la différence entre le <strong>prix de cession corrigé</strong> (prix de vente diminué des frais) et le <strong>prix d'acquisition corrigé</strong> (prix d'achat augmenté des frais de notaire et des travaux). Elle est soumise à l'impôt sur le revenu (19%) et aux prélèvements sociaux (17,2%), soit un taux global de 36,2% avant abattements.
+            Notre outil de <strong>simulation plus-value immobilière</strong> calcule en temps réel l'impôt dû lors de la vente d'un bien. La plus-value immobilière est la différence entre le <strong>prix de cession corrigé</strong> (prix de vente diminué des frais) et le <strong>prix d'acquisition corrigé</strong> (prix d'achat augmenté des frais de notaire et des travaux). Elle est soumise à l'impôt sur le revenu (19%) et aux prélèvements sociaux (17,2%), soit un taux global de 36,2% avant abattements.
           </p>
 
           {/* 3 colonnes : comment fonctionne le calcul */}
