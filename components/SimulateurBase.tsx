@@ -124,6 +124,8 @@ export default function SimulateurBase({
   showSituationVendeur = false,
   showModeAcquisition = false,
   showAmortissementsLMNP = false,
+  showQuotePart = false,
+  showSCI_IS_Options = false,
   showNonResidentOptions = false,
   disableForfaitFrais = false,
   labelPrixAchat,
@@ -135,8 +137,8 @@ export default function SimulateurBase({
   const [prixVente, setPrixVente] = useState("");
   const [dateAchat, setDateAchat] = useState("");
   const [situation, setSituation] = useState(defaultType);
-  const [situationVendeur, setSituationVendeur] = useState<"resident" | "non-resident-ue" | "non-resident-hors-ue">(
-    (defaultSituation as "resident" | "non-resident-ue" | "non-resident-hors-ue") ?? "resident"
+  const [situationVendeur, setSituationVendeur] = useState<"resident" | "non-resident-ue" | "non-resident-hors-ue" | "sci-ir" | "sci-is">(
+    (defaultSituation as "resident" | "non-resident-ue" | "non-resident-hors-ue" | "sci-ir" | "sci-is") ?? "sci-ir"
   );
   const [modeAcquisition, setModeAcquisition] = useState<"achat" | "donation" | "succession">(
     (defaultMode as "achat" | "donation" | "succession") ?? "achat"
@@ -154,6 +156,10 @@ export default function SimulateurBase({
   const [paysNonCooperatif, setPaysNonCooperatif] = useState(false);
   const [resideFrance2ans, setResideFrance2ans] = useState(false);
   const [anneesNonResident, setAnneesNonResident] = useState("");
+  // Options SCI
+  const [quotePart, setQuotePart] = useState("100");
+  const [amortissementsSCI_IS, setAmortissementsSCI_IS] = useState("");
+  const [beneficeAvantPV, setBeneficeAvantPV] = useState("");
   const [activeTab, setActiveTab] = useState("result");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
@@ -164,6 +170,9 @@ export default function SimulateurBase({
   const fc = parseFloat(fraisCession) || 0;
   const amort = parseFloat(amortissementsLMNP) || 0;
   const isDonationSuccession = modeAcquisition === "donation" || modeAcquisition === "succession";
+  const isSciIR = situationVendeur === "sci-ir";
+  const isSciIS = situationVendeur === "sci-is";
+  const isSci = isSciIR || isSciIS;
   // Pour donation/succession, le forfait 7,5% n'est pas applicable
   const effectiveFraisMode = (disableForfaitFrais || isDonationSuccession) ? "reel" : fraisMode;
   const fraisAcqui = effectiveFraisMode === "forfait" ? pa * FORFAIT_FRAIS_ACQUISITION : (parseFloat(fraisReels) || 0);
@@ -172,11 +181,14 @@ export default function SimulateurBase({
   const travauxVal = travauxMode === "forfait" && years >= 5
     ? pa * FORFAIT_TRAVAUX
     : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
-  const isRP = situation === "principale";
+  const isRP = situation === "principale" && !isSci;
   const isLMNP = situation === "lmnp" || defaultType === "lmnp";
   const isNonResident = situationVendeur === "non-resident-ue" || situationVendeur === "non-resident-hors-ue";
-  const showNROptions = (showNonResidentOptions || isNonResident) && !isRP;
+  const showNROptions = (showNonResidentOptions || isNonResident) && !isRP && !isSci;
   const anneesNR = parseInt(anneesNonResident) || 0;
+  const quotePartNum = Math.min(100, Math.max(1, parseFloat(quotePart) || 100));
+  const amortIS = parseFloat(amortissementsSCI_IS) || 0;
+  const benAvantPV = parseFloat(beneficeAvantPV) || 0;
 
   const calcOptions = {
     typeResidence: situation,
@@ -187,6 +199,9 @@ export default function SimulateurBase({
     resideFrance2ans,
     anneesNonResident: anneesNR,
     modeAcquisition,
+    quotePart: quotePartNum,
+    amortissementsSCI_IS: amortIS,
+    beneficeAvantPV: benAvantPV,
   };
 
   // ── Calculs ──
@@ -335,11 +350,13 @@ export default function SimulateurBase({
               </div>
             )}
 
-            {/* ── Situation vendeur (non-résident) ── */}
+            {/* ── Situation vendeur (non-résident ou SCI) ── */}
             {showSituationVendeur && (
               <div>
-                <label style={labelStyle}>Situation du vendeur <Tip text="Les non-résidents UE/EEE bénéficient d'un taux de PS réduit à 7,5%. Les résidents hors UE sont soumis aux 17,2% et peuvent être soumis au taux de 33,33% pour les pays non coopératifs." /></label>
+                <label style={labelStyle}>Régime fiscal <Tip text="SCI à l'IR : régime des particuliers (abattements pour durée de détention). SCI à l'IS : plus-value professionnelle, calcul sur la VNC, pas d'abattements." /></label>
                 <select value={situationVendeur} onChange={e => setSituationVendeur(e.target.value as typeof situationVendeur)} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="sci-ir">SCI à l'IR — transparence fiscale</option>
+                  <option value="sci-is">SCI à l'IS — plus-value professionnelle</option>
                   <option value="non-resident-ue">Non-résident UE/EEE/Suisse/UK</option>
                   <option value="non-resident-hors-ue">Non-résident hors UE</option>
                 </select>
@@ -427,6 +444,76 @@ export default function SimulateurBase({
                   />
                   <div style={{ fontSize: 12, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
                     ⚠️ <strong>Réforme LF 2025 — art. 150 VB II du CGI :</strong> les amortissements déduits sont réintégrés dans le calcul de la plus-value.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Quote-part SCI ── */}
+            {(showQuotePart || isSci) && (
+              <div>
+                <label style={labelStyle}>
+                  Votre quote-part dans la SCI (%)
+                  <Tip text="Pourcentage de vos parts dans la SCI. En SCI à l'IR, la plus-value est répartie entre les associés selon leur quote-part. La surtaxe de 19% s'apprécie par associé, pas sur la SCI entière." />
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ex : 50"
+                  min={1} max={100}
+                  value={quotePart}
+                  onChange={e => setQuotePart(e.target.value)}
+                  style={inputStyle}
+                />
+                {quotePartNum < 100 && (
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+                    {isSciIS ? "Votre part de l'IS" : `Votre quote-part de PV calculée`}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Options SCI IS ── */}
+            {(showSCI_IS_Options || isSciIS) && isSciIS && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{ background: "#EEEDF5", borderLeft: "3px solid #3F3D6E", borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: C.primary, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>🏢</span><span>Paramètres SCI à l'IS</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: 13 }}>
+                        Amortissements cumulés
+                        <Tip text="Total des amortissements comptabilisés depuis l'acquisition du bien. Réduit la valeur nette comptable (VNC). La plus-value IS = Prix de vente - Frais de cession - VNC. Les amortissements augmentent mécaniquement la PV imposable." />
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ex : 80 000"
+                        value={amortissementsSCI_IS}
+                        onChange={e => setAmortissementsSCI_IS(e.target.value)}
+                        style={{ ...inputStyle, fontSize: 13 }}
+                      />
+                      {amortIS > 0 && pa > 0 && (
+                        <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+                          VNC estimée : {Math.max(0, pa - amortIS).toLocaleString("fr-FR")} €
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: 13 }}>
+                        Bénéfice imposable avant cette vente
+                        <Tip text="Bénéfice de la SCI sur l'exercice en cours, hors plus-value. Permet de déterminer si le taux réduit IS de 15% (applicable jusqu'à 42 500 €) est déjà consommé. Laissez à 0 si vous ne savez pas." />
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ex : 5 000"
+                        value={beneficeAvantPV}
+                        onChange={e => setBeneficeAvantPV(e.target.value)}
+                        style={{ ...inputStyle, fontSize: 13 }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: C.orange, marginTop: 12, lineHeight: 1.5 }}>
+                    ⚠️ En SCI à l'IS : pas d'abattement pour durée de détention — même après 30 ans, la plus-value est intégralement imposée à l'IS.
                   </div>
                 </div>
               </div>

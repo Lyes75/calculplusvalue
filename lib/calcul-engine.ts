@@ -67,9 +67,36 @@ export interface ComputeOptions {
   anneesNonResident?: number;
   // Donation / Succession
   modeAcquisition?: "achat" | "donation" | "succession";
+  // SCI
+  quotePart?: number;             // pourcentage 0–100, défaut 100
+  amortissementsSCI_IS?: number;  // amortissements cumulés (SCI IS seulement)
+  beneficeAvantPV?: number;       // bénéfice imposable avant la vente (SCI IS)
 }
 
-// ── Calcul principal (cas standard + LMNP + Non-résident) ─────────────────
+// ── Calcul IS (SCI à l'IS) ─────────────────────────────────────────────────
+function computeIS(beneficeTotal: number): { impot: number; tranches: { label: string; montant: number }[] } {
+  const SEUIL_TAUX_REDUIT = 42500;
+  const tranches: { label: string; montant: number }[] = [];
+  let impot = 0;
+
+  if (beneficeTotal <= 0) return { impot: 0, tranches };
+
+  const tranche1 = Math.min(beneficeTotal, SEUIL_TAUX_REDUIT);
+  const impot1 = tranche1 * 0.15;
+  tranches.push({ label: `IS 15% sur ${fmt(tranche1)}`, montant: impot1 });
+  impot += impot1;
+
+  if (beneficeTotal > SEUIL_TAUX_REDUIT) {
+    const tranche2 = beneficeTotal - SEUIL_TAUX_REDUIT;
+    const impot2 = tranche2 * 0.25;
+    tranches.push({ label: `IS 25% sur ${fmt(tranche2)}`, montant: impot2 });
+    impot += impot2;
+  }
+
+  return { impot, tranches };
+}
+
+// ── Calcul principal (cas standard + LMNP + Non-résident + SCI) ───────────
 export function computePlusValue(
   prixAchat: number,
   prixVente: number,
@@ -88,6 +115,71 @@ export function computePlusValue(
     (dVente.getTime() - dAchat.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
 
+  // ── SCI ──
+  const situationVendeur = options?.situationVendeur ?? "resident";
+  const isSciIR = situationVendeur === "sci-ir";
+  const isSciIS = situationVendeur === "sci-is";
+  const quotePart = Math.min(100, Math.max(0, options?.quotePart ?? 100)) / 100; // ratio 0-1
+
+  // ── SCI à l'IS : calcul entièrement différent ──
+  if (isSciIS) {
+    const amortIS = options?.amortissementsSCI_IS ?? 0;
+    const beneficeAvantPV = options?.beneficeAvantPV ?? 0;
+    const vnc = Math.max(0, prixAchat - amortIS);
+    const prixVenteCorrige = prixVente - fraisCession;
+    const pvIS = Math.max(0, prixVenteCorrige - vnc);
+    const beneficeTotal = beneficeAvantPV + pvIS;
+    const { impot: totalIS, tranches } = computeIS(beneficeTotal);
+    const impotSurPV = Math.max(0, totalIS - computeIS(beneficeAvantPV).impot);
+    const tauxEffectifIS = pvIS > 0 ? (impotSurPV / pvIS * 100) : 0;
+    const prixAchatCorrige = vnc;
+
+    const lignesIS = [
+      { label: "Prix d'achat initial", montant: fmt(prixAchat), note: "", bold: false },
+      { label: "− Amortissements cumulés", montant: `− ${fmt(amortIS)}`, note: "Réduit la VNC", bold: false },
+      { label: "= Valeur nette comptable (VNC)", montant: fmt(vnc), note: "Base de calcul IS", bold: true },
+      { label: "Prix de vente corrigé", montant: fmt(prixVenteCorrige), note: "", bold: false },
+      { label: "− VNC", montant: `− ${fmt(vnc)}`, note: "", bold: false },
+      { label: "= Plus-value professionnelle", montant: fmt(pvIS), note: "Soumise à l'IS", bold: true },
+      { label: "Bénéfice avant cession", montant: fmt(beneficeAvantPV), note: "Exercice en cours", bold: false },
+      { label: "= Bénéfice total imposable", montant: fmt(beneficeTotal), note: "", bold: true },
+      ...tranches.map(t => ({ label: t.label, montant: fmt(t.montant), note: "", bold: false })),
+      { label: "IS total sur bénéfice", montant: fmt(totalIS), note: "", bold: true },
+      { label: "Dont IS imputable à la PV", montant: fmt(impotSurPV), note: "Estimation", bold: true },
+    ];
+
+    const warnings = [
+      "⚠️ En SCI à l'IS, le calcul est fondamentalement différent : pas d'abattement pour durée de détention. Les amortissements réduisent la VNC et augmentent mécaniquement la plus-value. Consultez votre expert-comptable.",
+    ];
+
+    // Quote-part
+    const impotQP = impotSurPV * quotePart;
+    const netVendeurTotal = prixVenteCorrige - impotSurPV;
+
+    return {
+      pvBrute: pvIS,
+      years,
+      abatIRPct: 0,
+      abatPSPct: 0,
+      pvNetIR: pvIS,
+      pvNetPS: 0,
+      impotIR: impotSurPV,
+      impotPS: 0,
+      surtaxe: 0,
+      totalImpot: impotSurPV,
+      netVendeur: netVendeurTotal,
+      tauxEffectif: tauxEffectifIS,
+      prixAchatCorrige,
+      prixVenteCorrige,
+      exonere: false,
+      tauxIR: tauxEffectifIS / 100,
+      tauxPS: 0,
+      regime: "SCI à l'IS — plus-value professionnelle",
+      lignesSpecifiques: lignesIS,
+      warnings,
+    };
+  }
+
   // ── Donation / Succession ──
   const modeAcquisition = options?.modeAcquisition ?? "achat";
   const isDonationSuccession = modeAcquisition === "donation" || modeAcquisition === "succession";
@@ -101,10 +193,8 @@ export function computePlusValue(
   const pvBrute = Math.max(0, prixVenteCorrige - prixAchatCorrige);
 
   // ── Non-résident : détermination des taux ──
-  const situationVendeur = options?.situationVendeur ?? "resident";
   const isNonResidentUE = situationVendeur === "non-resident-ue";
   const isNonResidentHorsUE = situationVendeur === "non-resident-hors-ue";
-  const isNonResident = isNonResidentUE || isNonResidentHorsUE;
 
   // Taux IR
   const tauxIR = (isNonResidentHorsUE && options?.paysNonCooperatif)
@@ -130,6 +220,12 @@ export function computePlusValue(
       note: `Mode d'acquisition : ${modeAcquisition === "donation" ? "Donation" : "Succession"}`,
       bold: false,
     }] : []),
+    ...(isSciIR && quotePart < 1 ? [{
+      label: `Quote-part (${Math.round(quotePart * 100)}%)`,
+      montant: fmt(pvBrute * quotePart),
+      note: "Votre part de la plus-value",
+      bold: true,
+    }] : []),
   ];
 
   // ── Warnings ──
@@ -152,7 +248,9 @@ export function computePlusValue(
 
   // ── Régime ──
   let regime: string | undefined;
-  if (isLMNP) {
+  if (isSciIR) {
+    regime = "SCI à l'IR — régime des particuliers";
+  } else if (isLMNP) {
     regime = "LMNP — amortissements réintégrés (réforme 2025)";
   } else if (modeAcquisition === "donation") {
     regime = "Bien reçu par donation";
@@ -180,8 +278,12 @@ export function computePlusValue(
 
   const abatIRPct = Math.min(100, getAbatIR(years));
   const abatPSPct = Math.min(100, getAbatPS(years));
-  const pvNetIR = pvBrute * (1 - abatIRPct / 100);
-  const pvNetPS = pvBrute * (1 - abatPSPct / 100);
+
+  // ── SCI à l'IR : calcul par quote-part ──
+  // La surtaxe s'apprécie sur la quote-part de chaque associé
+  const pvBruteQP = isSciIR ? pvBrute * quotePart : pvBrute;
+  const pvNetIR = pvBruteQP * (1 - abatIRPct / 100);
+  const pvNetPS = pvBruteQP * (1 - abatPSPct / 100);
 
   // ── Exonération 150K€ art. 150 U II 2° CGI (non-résidents UE anciens résidents) ──
   const resideFrance2ans = options?.resideFrance2ans === true;
@@ -193,16 +295,30 @@ export function computePlusValue(
   const surtaxe = exoNonResident ? 0 : getSurtaxe(pvNetIR);
   const totalImpot = impotIR + impotPS + surtaxe;
 
+  // Recommandation SCI IR quote-part < seuil surtaxe
+  if (isSciIR && quotePart < 1) {
+    const pvBruteTotale = pvBrute;
+    const pvNetIRTotale = pvBruteTotale * (1 - abatIRPct / 100);
+    const pvNetIRQP = pvNetIR;
+    if (pvNetIRTotale > SEUIL_SURTAXE && pvNetIRQP <= SEUIL_SURTAXE) {
+      const surtaxeEvitee = getSurtaxe(pvNetIRTotale) * quotePart;
+      warnings.push(
+        `En SCI à l'IR avec ${Math.round(quotePart * 100)}% de parts, votre quote-part de plus-value nette (${fmt(pvNetIRQP)}) est sous le seuil de surtaxe de 50 000 €. Économie de surtaxe estimée : ${fmt(surtaxeEvitee)}.`
+      );
+    }
+  }
+
   if (exoNonResident) {
     regime = "Non-résident UE — exonération 150K€ applicable (art. 150 U II 2°)";
     warnings.push("Exonération d'IR applicable : ancien résident fiscal français, non-résident depuis moins de 10 ans, plus-value nette ≤ 150 000 €. Les prélèvements sociaux restent dus.");
   }
 
   return {
-    pvBrute, years, abatIRPct, abatPSPct,
+    pvBrute: isSciIR ? pvBruteQP : pvBrute,
+    years, abatIRPct, abatPSPct,
     pvNetIR, pvNetPS, impotIR, impotPS, surtaxe, totalImpot,
     netVendeur: prixVenteCorrige - totalImpot,
-    tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0,
+    tauxEffectif: pvBrute > 0 ? (totalImpot / pvBruteQP * 100) : 0,
     prixAchatCorrige, prixVenteCorrige, exonere: false,
     tauxIR, tauxPS,
     regime, lignesSpecifiques, warnings,

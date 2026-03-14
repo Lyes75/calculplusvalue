@@ -96,8 +96,8 @@ export interface RecoContext {
   travauxMode: "forfait" | "reel" | "aucun";
   typeResidence?: "principale" | "secondaire" | "locatif" | "lmnp" | "terrain" | "scpi";
   amortissementsLMNP?: number;
-  // Non-résident
-  situationVendeur?: "resident" | "non-resident-ue" | "non-resident-hors-ue";
+  // Non-résident + SCI
+  situationVendeur?: "resident" | "non-resident-ue" | "non-resident-hors-ue" | "sci-ir" | "sci-is";
   affilieSecuEEE?: boolean;
   paysNonCooperatif?: boolean;
 }
