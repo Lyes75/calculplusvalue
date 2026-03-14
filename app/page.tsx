@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-const Simulator = dynamic(() => import("./simulator"), { ssr: false });
+const SimulateurBase = dynamic(() => import("@/components/SimulateurBase"), { ssr: false });
 export default function Home() {
-  return <Simulator />;
+  return <SimulateurBase defaultType="secondaire" showTypeResidence={true} />;
 }
