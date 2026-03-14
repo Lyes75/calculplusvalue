@@ -119,6 +119,8 @@ function EmailModal({ onClose, onSubmit }: EmailModalProps) {
 export default function SimulateurBase({
   defaultType = "secondaire",
   showTypeResidence = true,
+  showAmortissementsLMNP = false,
+  caseBadge,
 }: SimulateurBaseProps) {
   // ── State ──
   const [prixAchat, setPrixAchat] = useState("");
@@ -130,6 +132,7 @@ export default function SimulateurBase({
   const [travauxMode, setTravauxMode] = useState<"forfait" | "reel" | "aucun">("forfait");
   const [travauxReels, setTravauxReels] = useState("");
   const [fraisCession, setFraisCession] = useState("");
+  const [amortissementsLMNP, setAmortissementsLMNP] = useState("");
   const [activeTab, setActiveTab] = useState("result");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
@@ -138,6 +141,7 @@ export default function SimulateurBase({
   const pa = parseFloat(prixAchat) || 0;
   const pv = parseFloat(prixVente) || 0;
   const fc = parseFloat(fraisCession) || 0;
+  const amort = parseFloat(amortissementsLMNP) || 0;
   const fraisAcqui = fraisMode === "forfait" ? pa * FORFAIT_FRAIS_ACQUISITION : (parseFloat(fraisReels) || 0);
   const da = dateAchat ? new Date(dateAchat) : null;
   const years = da ? Math.floor((new Date().getTime() - da.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
@@ -145,18 +149,20 @@ export default function SimulateurBase({
     ? pa * FORFAIT_TRAVAUX
     : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
   const isRP = situation === "principale";
+  const isLMNP = situation === "lmnp" || defaultType === "lmnp";
+  const calcOptions = { typeResidence: situation, amortissementsLMNP: amort };
 
   // ── Calculs ──
   const result = useMemo((): CalculResult | null => {
     if (!pa || !pv || !da) return null;
     if (isRP) return computeRPResult(pa, pv, fraisAcqui, travauxVal, fc, years);
-    return computePlusValue(pa, pv, da, new Date(), fraisAcqui, travauxVal, fc);
-  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, years]);
+    return computePlusValue(pa, pv, da, new Date(), fraisAcqui, travauxVal, fc, calcOptions);
+  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, years, situation, amort]);
 
   const scenarios = useMemo((): ScenarioResult[] => {
     if (!pa || !pv || !da || isRP) return [];
-    return computeScenarios(pa, pv, da, fraisAcqui, travauxVal, fc);
-  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP]);
+    return computeScenarios(pa, pv, da, fraisAcqui, travauxVal, fc, calcOptions);
+  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, situation, amort]);
 
   const recommendations = useMemo((): Recommendation[] => {
     if (!result || isRP) return [];
@@ -164,8 +170,10 @@ export default function SimulateurBase({
       prixAchat: pa,
       travaux: travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0,
       travauxMode,
-    });
-  }, [result, pa, travauxMode, travauxReels, isRP]);
+      typeResidence: situation as "principale" | "secondaire" | "locatif" | "lmnp" | "terrain" | "scpi",
+      amortissementsLMNP: amort,
+    }, da ?? undefined);
+  }, [result, pa, travauxMode, travauxReels, isRP, situation, amort, da?.getTime()]);
 
   const pieData = result && !result.exonere && result.totalImpot > 0 ? [
     { name: "Net vendeur", value: Math.max(0, result.netVendeur), fill: "#3BAF7A" },
@@ -320,8 +328,50 @@ export default function SimulateurBase({
               <label style={labelStyle}>Frais de cession <Tip text="Diagnostics, frais d'agence à votre charge, mainlevée d'hypothèque. Déduits du prix de vente." /></label>
               <input type="number" placeholder="Diagnostics, agence..." value={fraisCession} onChange={e => setFraisCession(e.target.value)} style={inputStyle} />
             </div>
+
+            {/* ── Champ amortissements LMNP ── */}
+            {(showAmortissementsLMNP || isLMNP) && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{ background: "#EEEDF5", borderLeft: "3px solid #56CBAD", borderRadius: 8, padding: 16 }}>
+                  <label style={{ ...labelStyle, color: C.primary, fontWeight: 700 }}>
+                    Amortissements cumulés déduits
+                    <Tip text="Depuis la loi de finances 2025, les amortissements admis en déduction (sur le bien, les meubles, les travaux) réduisent le prix d'acquisition corrigé. Cela augmente mécaniquement la plus-value imposable. Indiquez le total des amortissements déduits depuis la mise en location." />
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Ex : 30 000"
+                    value={amortissementsLMNP}
+                    onChange={e => setAmortissementsLMNP(e.target.value)}
+                    style={inputStyle}
+                  />
+                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
+                    ⚠️ <strong>Réforme LF 2025 — art. 150 VB II du CGI :</strong> les amortissements déduits sont réintégrés dans le calcul de la plus-value.
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* ── Badge cas spécial ── */}
+        {caseBadge && (
+          <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: caseBadge.color === "menthe" ? "rgba(86,203,173,0.12)" : caseBadge.color, border: `1.5px solid ${caseBadge.color === "menthe" ? "#56CBAD" : caseBadge.color}`, borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 700, color: caseBadge.color === "menthe" ? "#2D2B55" : "#fff" }}>
+              <span>🏷️</span>
+              <span>{caseBadge.label}</span>
+            </span>
+          </div>
+        )}
+
+        {/* ── Warnings moteur de calcul ── */}
+        {result?.warnings && result.warnings.length > 0 && (
+          <div style={{ background: "#FDF3E8", border: "1px solid #D4923A", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 18 }}>⚠️</span>
+            <div style={{ fontSize: 13, color: "#7A4F1A", lineHeight: 1.6 }}>
+              {result.warnings.map((w, i) => <div key={i}>{w}</div>)}
+            </div>
+          </div>
+        )}
 
         {/* ── Résultats ── */}
         {result && (

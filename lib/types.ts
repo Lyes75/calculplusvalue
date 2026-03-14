@@ -93,4 +93,6 @@ export interface RecoContext {
   prixAchat: number;
   travaux: number;      // montant réel uniquement (0 si forfait ou aucun)
   travauxMode: "forfait" | "reel" | "aucun";
+  typeResidence?: "principale" | "secondaire" | "locatif" | "lmnp" | "terrain" | "scpi";
+  amortissementsLMNP?: number;
 }

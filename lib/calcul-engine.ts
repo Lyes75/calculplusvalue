@@ -55,7 +55,7 @@ function createEmptyResult(prixVenteCorrige: number, prixAchatCorrige: number, y
   };
 }
 
-// ── Calcul principal (cas standard) ───────────────────────────────────────
+// ── Calcul principal (cas standard + LMNP) ────────────────────────────────
 export function computePlusValue(
   prixAchat: number,
   prixVente: number,
@@ -63,7 +63,8 @@ export function computePlusValue(
   dateVente: Date,
   fraisAcqui: number,
   travaux: number,
-  fraisCession: number
+  fraisCession: number,
+  options?: { typeResidence?: string; amortissementsLMNP?: number }
 ): CalculResult | null {
   if (!prixAchat || !prixVente || !dateAchat) return null;
 
@@ -73,9 +74,28 @@ export function computePlusValue(
     (dVente.getTime() - dAchat.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
 
-  const prixAchatCorrige = prixAchat + fraisAcqui + travaux;
+  const isLMNP = options?.typeResidence === "lmnp";
+  const amortissements = isLMNP ? (options?.amortissementsLMNP ?? 0) : 0;
+
+  // LMNP : réforme LF 2025 — amortissements réintégrés (réduisent le prix d'achat corrigé)
+  const prixAchatCorrige = Math.max(0, prixAchat + fraisAcqui + travaux - amortissements);
   const prixVenteCorrige = prixVente - fraisCession;
   const pvBrute = Math.max(0, prixVenteCorrige - prixAchatCorrige);
+
+  const lignesSpecifiques = isLMNP && amortissements > 0 ? [
+    {
+      label: "− Amortissements réintégrés",
+      montant: fmt(amortissements),
+      note: "Réforme LF 2025 — art. 150 VB II",
+      bold: true,
+    },
+  ] : [];
+
+  const warnings = isLMNP && amortissements > 0
+    ? ["Les amortissements déduits sont réintégrés dans le calcul de la plus-value depuis la loi de finances 2025."]
+    : [];
+
+  const regime = isLMNP ? "LMNP — amortissements réintégrés (réforme 2025)" : undefined;
 
   if (pvBrute === 0) {
     return {
@@ -84,7 +104,7 @@ export function computePlusValue(
       surtaxe: 0, totalImpot: 0,
       netVendeur: prixVente - fraisCession,
       tauxEffectif: 0, prixAchatCorrige, prixVenteCorrige, exonere: false,
-      lignesSpecifiques: [], warnings: [],
+      regime, lignesSpecifiques, warnings,
     };
   }
 
@@ -103,7 +123,7 @@ export function computePlusValue(
     netVendeur: prixVenteCorrige - totalImpot,
     tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0,
     prixAchatCorrige, prixVenteCorrige, exonere: false,
-    lignesSpecifiques: [], warnings: [],
+    regime, lignesSpecifiques, warnings,
   };
 }
 
@@ -137,17 +157,18 @@ export function computeScenarios(
   dateAchat: Date,
   fraisAcqui: number,
   travaux: number,
-  fraisCession: number
+  fraisCession: number,
+  options?: { typeResidence?: string; amortissementsLMNP?: number }
 ): ScenarioResult[] {
   return [0, 1, 2, 3, 5].map(extra => {
     const fd = new Date();
     fd.setFullYear(fd.getFullYear() + extra);
 
-    const r = computePlusValue(prixAchat, prixVente, dateAchat, fd, fraisAcqui, travaux, fraisCession);
+    const r = computePlusValue(prixAchat, prixVente, dateAchat, fd, fraisAcqui, travaux, fraisCession, options);
 
     const base: CalculResult = r ?? createEmptyResult(
       prixVente - fraisCession,
-      prixAchat + fraisAcqui + travaux,
+      Math.max(0, prixAchat + fraisAcqui + travaux - (options?.amortissementsLMNP ?? 0)),
       Math.floor((fd.getTime() - new Date(dateAchat).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     );
 

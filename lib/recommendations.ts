@@ -1,14 +1,52 @@
-import { fmt } from "./calcul-engine";
+import { fmt, computePlusValue } from "./calcul-engine";
 import { TAUX_IR, TAUX_PS_RESIDENT, ANNEES_EXONERATION_IR, ANNEES_EXONERATION_PS, FORFAIT_TRAVAUX, SEUIL_SURTAXE } from "./constants";
 import type { CalculResult, Recommendation, RecoContext } from "./types";
 
 export function getRecommendations(
   result: CalculResult,
-  context: RecoContext
+  context: RecoContext,
+  dateAchat?: Date
 ): Recommendation[] {
   if (!result || result.pvBrute === 0) return [];
 
   const recs: Recommendation[] = [];
+  const isLMNP = context.typeResidence === "lmnp";
+
+  // ── Recommandations spécifiques LMNP ────────────────────────────────────
+  if (isLMNP && context.amortissementsLMNP && context.amortissementsLMNP > 0 && dateAchat) {
+    // Calcul sans réintégration pour mesurer l'impact
+    const resultSansAmort = computePlusValue(
+      context.prixAchat,
+      result.prixVenteCorrige + 0, // prixVente approché
+      dateAchat,
+      new Date(),
+      0, // fraisAcqui non disponible ici, approximation
+      context.travaux,
+      0,
+      { typeResidence: "secondaire" } // sans réintégration
+    );
+    const impotSansAmort = resultSansAmort?.totalImpot ?? 0;
+    const surimpot = result.totalImpot - impotSansAmort;
+    if (surimpot > 100) {
+      recs.push({
+        type: "alert",
+        icon: "📊",
+        title: "Impact de la réintégration des amortissements",
+        text: `La réforme 2025 augmente votre impôt de ${fmt(surimpot)}. Sans réintégration, votre impôt aurait été de ~${fmt(impotSansAmort)}.`,
+        impact: surimpot,
+      });
+    }
+  }
+
+  if (isLMNP && result.years < 5) {
+    recs.push({
+      type: "alert",
+      icon: "⚠️",
+      title: "Vérifiez votre statut LMP avant de vendre",
+      text: "Si vos recettes locatives dépassent 23 000 €/an, vous êtes peut-être LMP (et non LMNP). Le régime de plus-value change radicalement en LMP. Consultez un expert.",
+      impact: result.totalImpot * 0.5,
+    });
+  }
 
   // Timing : proche exonération IR
   if (result.years >= 18 && result.years < ANNEES_EXONERATION_IR) {
