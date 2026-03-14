@@ -91,8 +91,13 @@ export interface SimulationData {
 // ── Contexte pour les recommandations ────────────────────────────────────
 export interface RecoContext {
   prixAchat: number;
+  prixVente?: number;   // pour recommandations représentant fiscal
   travaux: number;      // montant réel uniquement (0 si forfait ou aucun)
   travauxMode: "forfait" | "reel" | "aucun";
   typeResidence?: "principale" | "secondaire" | "locatif" | "lmnp" | "terrain" | "scpi";
   amortissementsLMNP?: number;
+  // Non-résident
+  situationVendeur?: "resident" | "non-resident-ue" | "non-resident-hors-ue";
+  affilieSecuEEE?: boolean;
+  paysNonCooperatif?: boolean;
 }

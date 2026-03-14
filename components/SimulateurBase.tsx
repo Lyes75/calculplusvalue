@@ -118,8 +118,11 @@ function EmailModal({ onClose, onSubmit }: EmailModalProps) {
 // ── Composant principal ────────────────────────────────────────────────────
 export default function SimulateurBase({
   defaultType = "secondaire",
+  defaultSituation,
   showTypeResidence = true,
+  showSituationVendeur = false,
   showAmortissementsLMNP = false,
+  showNonResidentOptions = false,
   caseBadge,
 }: SimulateurBaseProps) {
   // ── State ──
@@ -127,12 +130,20 @@ export default function SimulateurBase({
   const [prixVente, setPrixVente] = useState("");
   const [dateAchat, setDateAchat] = useState("");
   const [situation, setSituation] = useState(defaultType);
+  const [situationVendeur, setSituationVendeur] = useState<"resident" | "non-resident-ue" | "non-resident-hors-ue">(
+    (defaultSituation as "resident" | "non-resident-ue" | "non-resident-hors-ue") ?? "resident"
+  );
   const [fraisMode, setFraisMode] = useState<"forfait" | "reel">("forfait");
   const [fraisReels, setFraisReels] = useState("");
   const [travauxMode, setTravauxMode] = useState<"forfait" | "reel" | "aucun">("forfait");
   const [travauxReels, setTravauxReels] = useState("");
   const [fraisCession, setFraisCession] = useState("");
   const [amortissementsLMNP, setAmortissementsLMNP] = useState("");
+  // Options non-résident
+  const [affilieSecuEEE, setAffilieSecuEEE] = useState(true);
+  const [paysNonCooperatif, setPaysNonCooperatif] = useState(false);
+  const [resideFrance2ans, setResideFrance2ans] = useState(false);
+  const [anneesNonResident, setAnneesNonResident] = useState("");
   const [activeTab, setActiveTab] = useState("result");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
@@ -150,35 +161,57 @@ export default function SimulateurBase({
     : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
   const isRP = situation === "principale";
   const isLMNP = situation === "lmnp" || defaultType === "lmnp";
-  const calcOptions = { typeResidence: situation, amortissementsLMNP: amort };
+  const isNonResident = situationVendeur === "non-resident-ue" || situationVendeur === "non-resident-hors-ue";
+  const showNROptions = (showNonResidentOptions || isNonResident) && !isRP;
+  const anneesNR = parseInt(anneesNonResident) || 0;
+
+  const calcOptions = {
+    typeResidence: situation,
+    amortissementsLMNP: amort,
+    situationVendeur,
+    affilieSecuEEE,
+    paysNonCooperatif,
+    resideFrance2ans,
+    anneesNonResident: anneesNR,
+  };
 
   // ── Calculs ──
   const result = useMemo((): CalculResult | null => {
     if (!pa || !pv || !da) return null;
     if (isRP) return computeRPResult(pa, pv, fraisAcqui, travauxVal, fc, years);
     return computePlusValue(pa, pv, da, new Date(), fraisAcqui, travauxVal, fc, calcOptions);
-  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, years, situation, amort]);
+  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, years, situation, amort,
+      situationVendeur, affilieSecuEEE, paysNonCooperatif, resideFrance2ans, anneesNR]);
 
   const scenarios = useMemo((): ScenarioResult[] => {
     if (!pa || !pv || !da || isRP) return [];
     return computeScenarios(pa, pv, da, fraisAcqui, travauxVal, fc, calcOptions);
-  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, situation, amort]);
+  }, [pa, pv, da?.getTime(), fraisAcqui, travauxVal, fc, isRP, situation, amort,
+      situationVendeur, affilieSecuEEE, paysNonCooperatif, resideFrance2ans, anneesNR]);
 
   const recommendations = useMemo((): Recommendation[] => {
     if (!result || isRP) return [];
     return getRecommendations(result, {
       prixAchat: pa,
+      prixVente: pv,
       travaux: travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0,
       travauxMode,
       typeResidence: situation as "principale" | "secondaire" | "locatif" | "lmnp" | "terrain" | "scpi",
       amortissementsLMNP: amort,
+      situationVendeur,
+      affilieSecuEEE,
+      paysNonCooperatif,
     }, da ?? undefined);
-  }, [result, pa, travauxMode, travauxReels, isRP, situation, amort, da?.getTime()]);
+  }, [result, pa, pv, travauxMode, travauxReels, isRP, situation, amort,
+      situationVendeur, affilieSecuEEE, paysNonCooperatif, da?.getTime()]);
+
+  const tauxIRDisplay = result?.tauxIR ? `${(result.tauxIR * 100).toFixed(2).replace(/\.?0+$/, "")}%` : "19%";
+  const tauxPSDisplay = result?.tauxPS ? `${(result.tauxPS * 100).toFixed(1).replace(".", ",")}%` : "17,2%";
 
   const pieData = result && !result.exonere && result.totalImpot > 0 ? [
     { name: "Net vendeur", value: Math.max(0, result.netVendeur), fill: "#3BAF7A" },
-    { name: "IR (19%)", value: result.impotIR, fill: "#D4923A" },
-    { name: "PS (17,2%)", value: result.impotPS, fill: "#6E6B8A" },
+    { name: `IR (${tauxIRDisplay})`, value: result.impotIR, fill: "#D4923A" },
+    { name: `PS (${tauxPSDisplay})`, value: result.impotPS, fill: "#6E6B8A" },
     ...(result.surtaxe > 0 ? [{ name: "Surtaxe", value: result.surtaxe, fill: "#E05656" }] : []),
   ] : [];
 
@@ -287,6 +320,18 @@ export default function SimulateurBase({
                 </select>
               </div>
             )}
+
+            {/* ── Situation vendeur (non-résident) ── */}
+            {showSituationVendeur && (
+              <div>
+                <label style={labelStyle}>Situation du vendeur <Tip text="Les non-résidents UE/EEE bénéficient d'un taux de PS réduit à 7,5%. Les résidents hors UE sont soumis aux 17,2% et peuvent être soumis au taux de 33,33% pour les pays non coopératifs." /></label>
+                <select value={situationVendeur} onChange={e => setSituationVendeur(e.target.value as typeof situationVendeur)} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="non-resident-ue">Non-résident UE/EEE/Suisse/UK</option>
+                  <option value="non-resident-hors-ue">Non-résident hors UE</option>
+                </select>
+              </div>
+            )}
+
             <div>
               <label style={labelStyle}>Prix d'achat <Tip text="Prix dans l'acte d'acquisition. Si donation/succession : valeur déclarée." /></label>
               <input type="number" placeholder="Ex : 180 000" value={prixAchat} onChange={e => setPrixAchat(e.target.value)} style={inputStyle} />
@@ -346,6 +391,96 @@ export default function SimulateurBase({
                   />
                   <div style={{ fontSize: 12, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
                     ⚠️ <strong>Réforme LF 2025 — art. 150 VB II du CGI :</strong> les amortissements déduits sont réintégrés dans le calcul de la plus-value.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Options non-résident ── */}
+            {showNROptions && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{ background: "#EEEDF5", borderLeft: "3px solid #2D2B55", borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: C.primary, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>🌍</span><span>Options non-résident</span>
+                  </div>
+                  <div style={{ display: "grid", gap: 12 }}>
+
+                    {/* Affilié sécu EEE (UE seulement) */}
+                    {situationVendeur === "non-resident-ue" && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                        <label style={{ fontSize: 13, color: C.text, flex: 1 }}>
+                          Affilié à la sécurité sociale d'un pays UE/EEE/Suisse/UK ?
+                          <Tip text="Si vous êtes affilié à un régime obligatoire de sécurité sociale dans un pays UE, EEE, Suisse ou Royaume-Uni, le taux de prélèvements sociaux est réduit à 7,5% (au lieu de 17,2%). À activer par défaut pour la grande majorité des expatriés UE." />
+                        </label>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          {([true, false] as const).map(v => (
+                            <button key={String(v)} onClick={() => setAffilieSecuEEE(v)}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${affilieSecuEEE === v ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: affilieSecuEEE === v ? C.cardAlt : C.card, color: affilieSecuEEE === v ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                              {v ? "Oui (7,5%)" : "Non (17,2%)"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pays non coopératif (hors UE seulement) */}
+                    {situationVendeur === "non-resident-hors-ue" && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                        <label style={{ fontSize: 13, color: C.text, flex: 1 }}>
+                          Pays non coopératif (taux IR 33,33%) ?
+                          <Tip text="Les résidents de pays figurant sur la liste des États non coopératifs (art. 238-0 A CGI) sont soumis à un taux majoré d'IR de 33,33% au lieu de 19% (art. 244 bis A CGI). Vérifiez la liste officielle sur impots.gouv.fr." />
+                        </label>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          {([false, true] as const).map(v => (
+                            <button key={String(v)} onClick={() => setPaysNonCooperatif(v)}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${paysNonCooperatif === v ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: paysNonCooperatif === v ? C.cardAlt : C.card, color: paysNonCooperatif === v ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                              {v ? "Oui (33,33%)" : "Non (19%)"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Résidé en France ≥ 2 ans (UE seulement) */}
+                    {situationVendeur === "non-resident-ue" && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                        <label style={{ fontSize: 13, color: C.text, flex: 1 }}>
+                          Avez-vous résidé fiscalement en France ≥ 2 ans ?
+                          <Tip text="Condition de l'exonération art. 150 U II 2° CGI : avoir été domicilié fiscalement en France pendant au moins 2 ans au cours de votre vie. Permet l'exonération IR jusqu'à 150 000€ de plus-value nette si vous êtes non-résident depuis moins de 10 ans." />
+                        </label>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          {([false, true] as const).map(v => (
+                            <button key={String(v)} onClick={() => setResideFrance2ans(v)}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${resideFrance2ans === v ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: resideFrance2ans === v ? C.cardAlt : C.card, color: resideFrance2ans === v ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                              {v ? "Oui" : "Non"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Années de non-résidence (si résidé 2 ans) */}
+                    {situationVendeur === "non-resident-ue" && resideFrance2ans && (
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: 13 }}>
+                          Depuis combien d'années êtes-vous non-résident ?
+                          <Tip text="L'exonération art. 150 U II 2° ne s'applique que dans les 10 ans suivant le départ de France. Au-delà de 10 ans, l'exonération n'est plus disponible." />
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Ex : 4"
+                          min={1} max={30}
+                          value={anneesNonResident}
+                          onChange={e => setAnneesNonResident(e.target.value)}
+                          style={{ ...inputStyle, fontSize: 13 }}
+                        />
+                        {anneesNR >= 10 && (
+                          <div style={{ fontSize: 12, color: C.orange, marginTop: 4 }}>
+                            ⚠️ Au-delà de 10 ans, l'exonération 150 000€ n'est plus applicable.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -526,10 +661,10 @@ export default function SimulateurBase({
                             ["Plus-value brute", fmt(result.pvBrute), `Détention : ${result.years} ans`, true],
                             [null],
                             [`Abattement IR (${fmtPct(result.abatIRPct)})`, `→ PV nette : ${fmt(result.pvNetIR)}`, "Exon. à 22 ans"],
-                            ["Impôt sur le revenu (19%)", fmt(result.impotIR), "", true],
+                            [`Impôt sur le revenu (${tauxIRDisplay})`, fmt(result.impotIR), "", true],
                             [null],
                             [`Abattement PS (${fmtPct(result.abatPSPct)})`, `→ PV nette : ${fmt(result.pvNetPS)}`, "Exon. à 30 ans"],
-                            ["Prélèvements sociaux (17,2%)", fmt(result.impotPS), "", true],
+                            [`Prélèvements sociaux (${tauxPSDisplay})`, fmt(result.impotPS), "", true],
                             ...(result.surtaxe > 0 ? [[null], ["Surtaxe (PV > 50K€)", fmt(result.surtaxe), "", true]] as (string | boolean | null)[][] : []),
                             [null],
                             ["TOTAL IMPÔT", fmt(result.totalImpot), `Taux effectif : ${fmtPct(result.tauxEffectif)}`, true],

@@ -1,7 +1,7 @@
 import {
-  TAUX_IR, TAUX_PS_RESIDENT,
+  TAUX_IR, TAUX_IR_PAYS_NON_COOPERATIF, TAUX_PS_RESIDENT, TAUX_PS_NON_RESIDENT_EEE,
   ABAT_IR_PAR_AN, ABAT_PS_PAR_AN_6_21, ABAT_PS_22E, ABAT_PS_PAR_AN_23_30,
-  SEUIL_SURTAXE,
+  SEUIL_SURTAXE, SEUIL_EXONERATION_NR_PV,
 } from "./constants";
 import type { CalculResult, ScenarioResult } from "./types";
 
@@ -55,7 +55,19 @@ function createEmptyResult(prixVenteCorrige: number, prixAchatCorrige: number, y
   };
 }
 
-// ── Calcul principal (cas standard + LMNP) ────────────────────────────────
+// ── Options du moteur de calcul ────────────────────────────────────────────
+export interface ComputeOptions {
+  typeResidence?: string;
+  amortissementsLMNP?: number;
+  // Non-résident
+  situationVendeur?: string;
+  affilieSecuEEE?: boolean;
+  paysNonCooperatif?: boolean;
+  resideFrance2ans?: boolean;
+  anneesNonResident?: number;
+}
+
+// ── Calcul principal (cas standard + LMNP + Non-résident) ─────────────────
 export function computePlusValue(
   prixAchat: number,
   prixVente: number,
@@ -64,7 +76,7 @@ export function computePlusValue(
   fraisAcqui: number,
   travaux: number,
   fraisCession: number,
-  options?: { typeResidence?: string; amortissementsLMNP?: number }
+  options?: ComputeOptions
 ): CalculResult | null {
   if (!prixAchat || !prixVente || !dateAchat) return null;
 
@@ -74,14 +86,31 @@ export function computePlusValue(
     (dVente.getTime() - dAchat.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
 
+  // ── LMNP : réintégration des amortissements (LF 2025) ──
   const isLMNP = options?.typeResidence === "lmnp";
   const amortissements = isLMNP ? (options?.amortissementsLMNP ?? 0) : 0;
 
-  // LMNP : réforme LF 2025 — amortissements réintégrés (réduisent le prix d'achat corrigé)
   const prixAchatCorrige = Math.max(0, prixAchat + fraisAcqui + travaux - amortissements);
   const prixVenteCorrige = prixVente - fraisCession;
   const pvBrute = Math.max(0, prixVenteCorrige - prixAchatCorrige);
 
+  // ── Non-résident : détermination des taux ──
+  const situationVendeur = options?.situationVendeur ?? "resident";
+  const isNonResidentUE = situationVendeur === "non-resident-ue";
+  const isNonResidentHorsUE = situationVendeur === "non-resident-hors-ue";
+  const isNonResident = isNonResidentUE || isNonResidentHorsUE;
+
+  // Taux IR
+  const tauxIR = (isNonResidentHorsUE && options?.paysNonCooperatif)
+    ? TAUX_IR_PAYS_NON_COOPERATIF
+    : TAUX_IR;
+
+  // Taux PS
+  const tauxPS = isNonResidentUE && (options?.affilieSecuEEE !== false)
+    ? TAUX_PS_NON_RESIDENT_EEE   // 7,5%
+    : TAUX_PS_RESIDENT;           // 17,2%
+
+  // ── Lignes spécifiques LMNP ──
   const lignesSpecifiques = isLMNP && amortissements > 0 ? [
     {
       label: "− Amortissements réintégrés",
@@ -91,11 +120,32 @@ export function computePlusValue(
     },
   ] : [];
 
-  const warnings = isLMNP && amortissements > 0
-    ? ["Les amortissements déduits sont réintégrés dans le calcul de la plus-value depuis la loi de finances 2025."]
-    : [];
+  // ── Warnings ──
+  const warnings: string[] = [];
+  if (isLMNP && amortissements > 0) {
+    warnings.push("Les amortissements déduits sont réintégrés dans le calcul de la plus-value depuis la loi de finances 2025.");
+  }
+  if (isNonResidentUE && (options?.affilieSecuEEE !== false)) {
+    warnings.push("En tant que non-résident UE/EEE/Suisse affilié à un régime de sécurité sociale, vous bénéficiez d'un taux réduit de prélèvements sociaux (7,5% au lieu de 17,2%).");
+  }
+  if (isNonResidentHorsUE && options?.paysNonCooperatif) {
+    warnings.push("Le taux majoré de 33,33% s'applique pour les résidents de pays non coopératifs (art. 244 bis A CGI).");
+  }
+  if (isNonResidentHorsUE && prixVente > 150000) {
+    warnings.push("Un représentant fiscal est obligatoire pour cette vente (prix de vente > 150 000 € — art. 244 bis A CGI).");
+  }
 
-  const regime = isLMNP ? "LMNP — amortissements réintégrés (réforme 2025)" : undefined;
+  // ── Régime ──
+  let regime: string | undefined;
+  if (isLMNP) {
+    regime = "LMNP — amortissements réintégrés (réforme 2025)";
+  } else if (isNonResidentUE) {
+    regime = "Non-résident UE/EEE — PS à 7,5%";
+  } else if (isNonResidentHorsUE) {
+    regime = options?.paysNonCooperatif
+      ? "Non-résident — pays non coopératif (33,33%)"
+      : "Non-résident hors UE";
+  }
 
   if (pvBrute === 0) {
     return {
@@ -104,6 +154,7 @@ export function computePlusValue(
       surtaxe: 0, totalImpot: 0,
       netVendeur: prixVente - fraisCession,
       tauxEffectif: 0, prixAchatCorrige, prixVenteCorrige, exonere: false,
+      tauxIR, tauxPS,
       regime, lignesSpecifiques, warnings,
     };
   }
@@ -112,10 +163,21 @@ export function computePlusValue(
   const abatPSPct = Math.min(100, getAbatPS(years));
   const pvNetIR = pvBrute * (1 - abatIRPct / 100);
   const pvNetPS = pvBrute * (1 - abatPSPct / 100);
-  const impotIR = pvNetIR * TAUX_IR;
-  const impotPS = pvNetPS * TAUX_PS_RESIDENT;
-  const surtaxe = getSurtaxe(pvNetIR);
+
+  // ── Exonération 150K€ art. 150 U II 2° CGI (non-résidents UE anciens résidents) ──
+  const resideFrance2ans = options?.resideFrance2ans === true;
+  const anneesNR = options?.anneesNonResident ?? 999;
+  const exoNonResident = isNonResidentUE && resideFrance2ans && anneesNR < 10 && pvNetIR <= SEUIL_EXONERATION_NR_PV;
+
+  const impotIR = exoNonResident ? 0 : pvNetIR * tauxIR;
+  const impotPS = pvNetPS * tauxPS;
+  const surtaxe = exoNonResident ? 0 : getSurtaxe(pvNetIR);
   const totalImpot = impotIR + impotPS + surtaxe;
+
+  if (exoNonResident) {
+    regime = "Non-résident UE — exonération 150K€ applicable (art. 150 U II 2°)";
+    warnings.push("Exonération d'IR applicable : ancien résident fiscal français, non-résident depuis moins de 10 ans, plus-value nette ≤ 150 000 €. Les prélèvements sociaux restent dus.");
+  }
 
   return {
     pvBrute, years, abatIRPct, abatPSPct,
@@ -123,6 +185,7 @@ export function computePlusValue(
     netVendeur: prixVenteCorrige - totalImpot,
     tauxEffectif: pvBrute > 0 ? (totalImpot / pvBrute * 100) : 0,
     prixAchatCorrige, prixVenteCorrige, exonere: false,
+    tauxIR, tauxPS,
     regime, lignesSpecifiques, warnings,
   };
 }
@@ -158,7 +221,7 @@ export function computeScenarios(
   fraisAcqui: number,
   travaux: number,
   fraisCession: number,
-  options?: { typeResidence?: string; amortissementsLMNP?: number }
+  options?: ComputeOptions
 ): ScenarioResult[] {
   return [0, 1, 2, 3, 5].map(extra => {
     const fd = new Date();
