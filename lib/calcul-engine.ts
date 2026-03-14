@@ -65,6 +65,8 @@ export interface ComputeOptions {
   paysNonCooperatif?: boolean;
   resideFrance2ans?: boolean;
   anneesNonResident?: number;
+  // Donation / Succession
+  modeAcquisition?: "achat" | "donation" | "succession";
 }
 
 // ── Calcul principal (cas standard + LMNP + Non-résident) ─────────────────
@@ -85,6 +87,10 @@ export function computePlusValue(
   const years = Math.floor(
     (dVente.getTime() - dAchat.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
   );
+
+  // ── Donation / Succession ──
+  const modeAcquisition = options?.modeAcquisition ?? "achat";
+  const isDonationSuccession = modeAcquisition === "donation" || modeAcquisition === "succession";
 
   // ── LMNP : réintégration des amortissements (LF 2025) ──
   const isLMNP = options?.typeResidence === "lmnp";
@@ -110,20 +116,29 @@ export function computePlusValue(
     ? TAUX_PS_NON_RESIDENT_EEE   // 7,5%
     : TAUX_PS_RESIDENT;           // 17,2%
 
-  // ── Lignes spécifiques LMNP ──
-  const lignesSpecifiques = isLMNP && amortissements > 0 ? [
-    {
+  // ── Lignes spécifiques LMNP + donation/succession ──
+  const lignesSpecifiques = [
+    ...(isLMNP && amortissements > 0 ? [{
       label: "− Amortissements réintégrés",
       montant: fmt(amortissements),
       note: "Réforme LF 2025 — art. 150 VB II",
       bold: true,
-    },
-  ] : [];
+    }] : []),
+    ...(isDonationSuccession ? [{
+      label: modeAcquisition === "donation" ? "Valeur déclarée dans l'acte de donation" : "Valeur déclarée dans la déclaration de succession",
+      montant: fmt(prixAchat),
+      note: `Mode d'acquisition : ${modeAcquisition === "donation" ? "Donation" : "Succession"}`,
+      bold: false,
+    }] : []),
+  ];
 
   // ── Warnings ──
   const warnings: string[] = [];
   if (isLMNP && amortissements > 0) {
     warnings.push("Les amortissements déduits sont réintégrés dans le calcul de la plus-value depuis la loi de finances 2025.");
+  }
+  if (isDonationSuccession) {
+    warnings.push(`Le forfait de 7,5% n'est pas applicable aux biens reçus par ${modeAcquisition === "donation" ? "donation" : "succession"}. Seuls les frais réellement payés (droits de mutation à titre gratuit + frais de notaire) sont déductibles.`);
   }
   if (isNonResidentUE && (options?.affilieSecuEEE !== false)) {
     warnings.push("En tant que non-résident UE/EEE/Suisse affilié à un régime de sécurité sociale, vous bénéficiez d'un taux réduit de prélèvements sociaux (7,5% au lieu de 17,2%).");
@@ -139,6 +154,10 @@ export function computePlusValue(
   let regime: string | undefined;
   if (isLMNP) {
     regime = "LMNP — amortissements réintégrés (réforme 2025)";
+  } else if (modeAcquisition === "donation") {
+    regime = "Bien reçu par donation";
+  } else if (modeAcquisition === "succession") {
+    regime = "Bien reçu par succession";
   } else if (isNonResidentUE) {
     regime = "Non-résident UE/EEE — PS à 7,5%";
   } else if (isNonResidentHorsUE) {

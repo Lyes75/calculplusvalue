@@ -119,10 +119,15 @@ function EmailModal({ onClose, onSubmit }: EmailModalProps) {
 export default function SimulateurBase({
   defaultType = "secondaire",
   defaultSituation,
+  defaultMode,
   showTypeResidence = true,
   showSituationVendeur = false,
+  showModeAcquisition = false,
   showAmortissementsLMNP = false,
   showNonResidentOptions = false,
+  disableForfaitFrais = false,
+  labelPrixAchat,
+  labelFraisAcquisition,
   caseBadge,
 }: SimulateurBaseProps) {
   // ── State ──
@@ -133,7 +138,12 @@ export default function SimulateurBase({
   const [situationVendeur, setSituationVendeur] = useState<"resident" | "non-resident-ue" | "non-resident-hors-ue">(
     (defaultSituation as "resident" | "non-resident-ue" | "non-resident-hors-ue") ?? "resident"
   );
-  const [fraisMode, setFraisMode] = useState<"forfait" | "reel">("forfait");
+  const [modeAcquisition, setModeAcquisition] = useState<"achat" | "donation" | "succession">(
+    (defaultMode as "achat" | "donation" | "succession") ?? "achat"
+  );
+  const [fraisMode, setFraisMode] = useState<"forfait" | "reel">(
+    disableForfaitFrais ? "reel" : "forfait"
+  );
   const [fraisReels, setFraisReels] = useState("");
   const [travauxMode, setTravauxMode] = useState<"forfait" | "reel" | "aucun">("forfait");
   const [travauxReels, setTravauxReels] = useState("");
@@ -153,7 +163,10 @@ export default function SimulateurBase({
   const pv = parseFloat(prixVente) || 0;
   const fc = parseFloat(fraisCession) || 0;
   const amort = parseFloat(amortissementsLMNP) || 0;
-  const fraisAcqui = fraisMode === "forfait" ? pa * FORFAIT_FRAIS_ACQUISITION : (parseFloat(fraisReels) || 0);
+  const isDonationSuccession = modeAcquisition === "donation" || modeAcquisition === "succession";
+  // Pour donation/succession, le forfait 7,5% n'est pas applicable
+  const effectiveFraisMode = (disableForfaitFrais || isDonationSuccession) ? "reel" : fraisMode;
+  const fraisAcqui = effectiveFraisMode === "forfait" ? pa * FORFAIT_FRAIS_ACQUISITION : (parseFloat(fraisReels) || 0);
   const da = dateAchat ? new Date(dateAchat) : null;
   const years = da ? Math.floor((new Date().getTime() - da.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
   const travauxVal = travauxMode === "forfait" && years >= 5
@@ -173,6 +186,7 @@ export default function SimulateurBase({
     paysNonCooperatif,
     resideFrance2ans,
     anneesNonResident: anneesNR,
+    modeAcquisition,
   };
 
   // ── Calculs ──
@@ -332,8 +346,19 @@ export default function SimulateurBase({
               </div>
             )}
 
+            {/* ── Mode d'acquisition (donation/succession) ── */}
+            {showModeAcquisition && (
+              <div>
+                <label style={labelStyle}>Mode d'acquisition <Tip text="Pour une donation ou une succession, la valeur retenue est celle déclarée dans l'acte. Le forfait 7,5% de frais d'acquisition ne s'applique pas — seuls les droits réellement payés sont déductibles." /></label>
+                <select value={modeAcquisition} onChange={e => setModeAcquisition(e.target.value as typeof modeAcquisition)} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="donation">Donation</option>
+                  <option value="succession">Succession / Héritage</option>
+                </select>
+              </div>
+            )}
+
             <div>
-              <label style={labelStyle}>Prix d'achat <Tip text="Prix dans l'acte d'acquisition. Si donation/succession : valeur déclarée." /></label>
+              <label style={labelStyle}>{labelPrixAchat ?? "Prix d'achat"} <Tip text={isDonationSuccession ? "Valeur vénale déclarée dans l'acte de donation ou la déclaration de succession. C'est cette valeur qui sert de base au calcul de la plus-value." : "Prix dans l'acte d'acquisition. Si donation/succession : valeur déclarée."} /></label>
               <input type="number" placeholder="Ex : 180 000" value={prixAchat} onChange={e => setPrixAchat(e.target.value)} style={inputStyle} />
             </div>
             <div>
@@ -341,20 +366,31 @@ export default function SimulateurBase({
               <input type="number" placeholder="Ex : 280 000" value={prixVente} onChange={e => setPrixVente(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Date d'achat <Tip text="Date de l'acte authentique. Détermine la durée de détention et les abattements." /></label>
+              <label style={labelStyle}>{isDonationSuccession ? (modeAcquisition === "succession" ? "Date du décès" : "Date de l'acte de donation") : "Date d'achat"} <Tip text={isDonationSuccession ? "La durée de détention court depuis la date du décès (succession) ou de l'acte notarié de donation." : "Date de l'acte authentique. Détermine la durée de détention et les abattements."} /></label>
               <input type="date" value={dateAchat} onChange={e => setDateAchat(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Frais d'acquisition <Tip text="Forfait 7,5% (sans justificatif) ou montant réel des frais de notaire." /></label>
-              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                {(["forfait", "reel"] as const).map(m => (
-                  <button key={m} onClick={() => setFraisMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${fraisMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: fraisMode === m ? C.cardAlt : C.card, color: fraisMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
-                    {m === "forfait" ? "Forfait 7,5%" : "Réels"}
-                  </button>
-                ))}
-              </div>
-              {fraisMode === "reel" && <input type="number" placeholder="Montant" value={fraisReels} onChange={e => setFraisReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
-              {fraisMode === "forfait" && pa > 0 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * FORFAIT_FRAIS_ACQUISITION)}</div>}
+              <label style={labelStyle}>{labelFraisAcquisition ?? "Frais d'acquisition"} <Tip text={isDonationSuccession || disableForfaitFrais ? "Droits de mutation à titre gratuit (droits de succession ou de donation) effectivement payés par le vendeur + frais de notaire réels. Le forfait 7,5% ne s'applique pas." : "Forfait 7,5% (sans justificatif) ou montant réel des frais de notaire."} /></label>
+              {(isDonationSuccession || disableForfaitFrais) ? (
+                // Mode don/succession : seulement frais réels
+                <div>
+                  <input type="number" placeholder="Droits + frais notaire" value={fraisReels} onChange={e => setFraisReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />
+                  <div style={{ fontSize: 12, color: C.orange, marginTop: 4 }}>Le forfait 7,5% n'est pas applicable — frais réels uniquement</div>
+                </div>
+              ) : (
+                // Mode achat classique : forfait ou réels
+                <>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                    {(["forfait", "reel"] as const).map(m => (
+                      <button key={m} onClick={() => setFraisMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${fraisMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: fraisMode === m ? C.cardAlt : C.card, color: fraisMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                        {m === "forfait" ? "Forfait 7,5%" : "Réels"}
+                      </button>
+                    ))}
+                  </div>
+                  {fraisMode === "reel" && <input type="number" placeholder="Montant" value={fraisReels} onChange={e => setFraisReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
+                  {fraisMode === "forfait" && pa > 0 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * FORFAIT_FRAIS_ACQUISITION)}</div>}
+                </>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Travaux <Tip text="Forfait 15% si détention > 5 ans (sans justificatif) ou réels avec factures d'entreprises." /></label>
