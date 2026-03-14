@@ -5,14 +5,35 @@ import type { CalculResult, Recommendation, RecoContext } from "./types";
 export function getRecommendations(
   result: CalculResult,
   context: RecoContext,
-  dateAchat?: Date
+  dateAchat?: Date,
+  fraisAcquiReels?: number
 ): Recommendation[] {
   if (!result || result.pvBrute === 0) return [];
 
   const recs: Recommendation[] = [];
   const isLMNP = context.typeResidence === "lmnp";
+  const isSCPI = context.typeResidence === "scpi";
+  const isTerrain = context.typeResidence === "terrain";
   const isNonResidentUE = context.situationVendeur === "non-resident-ue";
   const isNonResidentHorsUE = context.situationVendeur === "non-resident-hors-ue";
+
+  // ── Recommandations spécifiques SCPI ────────────────────────────────────
+  if (isSCPI && fraisAcquiReels !== undefined && context.prixAchat > 0) {
+    const forfait75 = context.prixAchat * 0.075;
+    if (fraisAcquiReels > forfait75) {
+      const gainFraisReels = (fraisAcquiReels - forfait75)
+        * (1 - result.abatIRPct / 100) * TAUX_IR
+        + (fraisAcquiReels - forfait75)
+        * (1 - result.abatPSPct / 100) * TAUX_PS_RESIDENT;
+      recs.push({
+        type: "optim",
+        icon: "💡",
+        title: "Frais de souscription réels > forfait 7,5%",
+        text: `Vos frais réels (${fmt(fraisAcquiReels)}) sont supérieurs au forfait 7,5% (${fmt(forfait75)}). Optez pour les frais réels — économie estimée : ~${fmt(gainFraisReels)}.`,
+        impact: gainFraisReels,
+      });
+    }
+  }
 
   // ── Recommandations spécifiques LMNP ────────────────────────────────────
   if (isLMNP && context.amortissementsLMNP && context.amortissementsLMNP > 0 && dateAchat) {
@@ -124,8 +145,8 @@ export function getRecommendations(
     });
   }
 
-  // Optimisation : forfait travaux disponible mais non utilisé
-  if (result.years >= 5 && context.travaux === 0 && context.travauxMode !== "forfait") {
+  // Optimisation : forfait travaux disponible mais non utilisé (pas pour terrain/SCPI)
+  if (result.years >= 5 && context.travaux === 0 && context.travauxMode !== "forfait" && !isTerrain && !isSCPI) {
     const f = context.prixAchat * FORFAIT_TRAVAUX;
     const eco = f * (1 - result.abatIRPct / 100) * TAUX_IR
               + f * (1 - result.abatPSPct / 100) * TAUX_PS_RESIDENT;
@@ -140,8 +161,8 @@ export function getRecommendations(
     }
   }
 
-  // Optimisation : forfait plus avantageux que les réels
-  if (context.travaux > 0 && result.years >= 5) {
+  // Optimisation : forfait plus avantageux que les réels (pas pour terrain/SCPI)
+  if (context.travaux > 0 && result.years >= 5 && !isTerrain && !isSCPI) {
     const f = context.prixAchat * FORFAIT_TRAVAUX;
     if (f > context.travaux) {
       recs.push({

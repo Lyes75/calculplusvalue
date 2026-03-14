@@ -128,6 +128,7 @@ export default function SimulateurBase({
   showSCI_IS_Options = false,
   showNonResidentOptions = false,
   disableForfaitFrais = false,
+  disableForfaitTravaux = false,
   labelPrixAchat,
   labelFraisAcquisition,
   caseBadge,
@@ -178,9 +179,11 @@ export default function SimulateurBase({
   const fraisAcqui = effectiveFraisMode === "forfait" ? pa * FORFAIT_FRAIS_ACQUISITION : (parseFloat(fraisReels) || 0);
   const da = dateAchat ? new Date(dateAchat) : null;
   const years = da ? Math.floor((new Date().getTime() - da.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 0;
-  const travauxVal = travauxMode === "forfait" && years >= 5
+  // Pour terrain/SCPI, le forfait 15% travaux ne s'applique pas
+  const effectiveTravauxMode = disableForfaitTravaux && travauxMode === "forfait" ? "aucun" : travauxMode;
+  const travauxVal = effectiveTravauxMode === "forfait" && years >= 5
     ? pa * FORFAIT_TRAVAUX
-    : (travauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
+    : (effectiveTravauxMode === "reel" ? (parseFloat(travauxReels) || 0) : 0);
   const isRP = situation === "principale" && !isSci;
   const isLMNP = situation === "lmnp" || defaultType === "lmnp";
   const isNonResident = situationVendeur === "non-resident-ue" || situationVendeur === "non-resident-hors-ue";
@@ -220,6 +223,8 @@ export default function SimulateurBase({
 
   const recommendations = useMemo((): Recommendation[] => {
     if (!result || isRP) return [];
+    // Pour SCPI : on passe les frais réels bruts (avant application du forfait) pour la recommandation
+    const fraisAcquiReelsBruts = parseFloat(fraisReels) || 0;
     return getRecommendations(result, {
       prixAchat: pa,
       prixVente: pv,
@@ -230,7 +235,7 @@ export default function SimulateurBase({
       situationVendeur,
       affilieSecuEEE,
       paysNonCooperatif,
-    }, da ?? undefined);
+    }, da ?? undefined, fraisAcquiReelsBruts);
   }, [result, pa, pv, travauxMode, travauxReels, isRP, situation, amort,
       situationVendeur, affilieSecuEEE, paysNonCooperatif, da?.getTime()]);
 
@@ -410,17 +415,35 @@ export default function SimulateurBase({
               )}
             </div>
             <div>
-              <label style={labelStyle}>Travaux <Tip text="Forfait 15% si détention > 5 ans (sans justificatif) ou réels avec factures d'entreprises." /></label>
-              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                {(["forfait", "reel", "aucun"] as const).map(m => (
-                  <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m ? C.cardAlt : C.card, color: travauxMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
-                    {m === "forfait" ? "Forfait 15%" : m === "reel" ? "Réels" : "Aucun"}
-                  </button>
-                ))}
-              </div>
-              {travauxMode === "reel" && <input type="number" placeholder="Montant factures" value={travauxReels} onChange={e => setTravauxReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
-              {travauxMode === "forfait" && pa > 0 && years >= 5 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * FORFAIT_TRAVAUX)}</div>}
-              {travauxMode === "forfait" && years < 5 && years > 0 && <div style={{ fontSize: 12, color: C.orange, marginTop: 2 }}>Disponible après 5 ans de détention</div>}
+              <label style={labelStyle}>Travaux <Tip text={disableForfaitTravaux ? "Le forfait 15% ne s'applique pas à ce type de bien. Seuls les travaux réels avec factures sont déductibles." : "Forfait 15% si détention > 5 ans (sans justificatif) ou réels avec factures d'entreprises."} /></label>
+              {disableForfaitTravaux ? (
+                // Terrain / SCPI : frais réels uniquement
+                <div>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                    {(["reel", "aucun"] as const).map(m => (
+                      <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m || (m === "aucun" && travauxMode === "forfait") ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m || (m === "aucun" && travauxMode === "forfait") ? C.cardAlt : C.card, color: travauxMode === m || (m === "aucun" && travauxMode === "forfait") ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                        {m === "reel" ? "Réels" : "Aucun"}
+                      </button>
+                    ))}
+                  </div>
+                  {travauxMode === "reel" && <input type="number" placeholder="Montant factures" value={travauxReels} onChange={e => setTravauxReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
+                  <div style={{ fontSize: 12, color: C.orange, marginTop: 4 }}>Forfait 15% non applicable — frais réels uniquement</div>
+                </div>
+              ) : (
+                // Mode standard : forfait ou réels
+                <>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                    {(["forfait", "reel", "aucun"] as const).map(m => (
+                      <button key={m} onClick={() => setTravauxMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${travauxMode === m ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: travauxMode === m ? C.cardAlt : C.card, color: travauxMode === m ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                        {m === "forfait" ? "Forfait 15%" : m === "reel" ? "Réels" : "Aucun"}
+                      </button>
+                    ))}
+                  </div>
+                  {travauxMode === "reel" && <input type="number" placeholder="Montant factures" value={travauxReels} onChange={e => setTravauxReels(e.target.value)} style={{ ...inputStyle, fontSize: 13 }} />}
+                  {travauxMode === "forfait" && pa > 0 && years >= 5 && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{fmt(pa * FORFAIT_TRAVAUX)}</div>}
+                  {travauxMode === "forfait" && years < 5 && years > 0 && <div style={{ fontSize: 12, color: C.orange, marginTop: 2 }}>Disponible après 5 ans de détention</div>}
+                </>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Frais de cession <Tip text="Diagnostics, frais d'agence à votre charge, mainlevée d'hypothèque. Déduits du prix de vente." /></label>

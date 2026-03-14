@@ -246,12 +246,31 @@ export function computePlusValue(
     warnings.push("Un représentant fiscal est obligatoire pour cette vente (prix de vente > 150 000 € — art. 244 bis A CGI).");
   }
 
+  // ── Terrain / SCPI warnings ──
+  const isTerrain = options?.typeResidence === "terrain";
+  const isSCPI = options?.typeResidence === "scpi";
+
+  if (isTerrain) {
+    warnings.push("Le forfait de 15% pour travaux ne s'applique pas aux terrains non bâtis. Seuls les travaux réels avec factures (viabilisation, clôture, bornage…) sont déductibles.");
+  }
+  if (isSCPI) {
+    // Recommandation frais réels vs forfait
+    const forfait75 = prixAchat * 0.075;
+    if (fraisAcqui > forfait75 && fraisAcqui === forfait75) {
+      // hint géré dans recommendations.ts
+    }
+  }
+
   // ── Régime ──
   let regime: string | undefined;
   if (isSciIR) {
     regime = "SCI à l'IR — régime des particuliers";
   } else if (isLMNP) {
     regime = "LMNP — amortissements réintégrés (réforme 2025)";
+  } else if (isTerrain) {
+    regime = "Terrain — forfait travaux non applicable";
+  } else if (isSCPI) {
+    regime = "Parts de SCPI — régime des particuliers";
   } else if (modeAcquisition === "donation") {
     regime = "Bien reçu par donation";
   } else if (modeAcquisition === "succession") {
