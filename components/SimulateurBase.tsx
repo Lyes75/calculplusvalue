@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
-import { computePlusValue, computeRPResult, computeScenarios, fmt, fmtPct } from "@/lib/calcul-engine";
+import { computePlusValue, computeRPResult, computeScenarios, fmt, fmtPct, getFractionDemembrement } from "@/lib/calcul-engine";
 import { getRecommendations } from "@/lib/recommendations";
 import { generatePDFContent } from "@/lib/pdf-generator";
 import { C, FORFAIT_FRAIS_ACQUISITION, FORFAIT_TRAVAUX } from "@/lib/constants";
@@ -125,6 +125,7 @@ export default function SimulateurBase({
   showModeAcquisition = false,
   showAmortissementsLMNP = false,
   showQuotePart = false,
+  showDemembrement = false,
   showSCI_IS_Options = false,
   showNonResidentOptions = false,
   disableForfaitFrais = false,
@@ -161,6 +162,10 @@ export default function SimulateurBase({
   const [quotePart, setQuotePart] = useState("100");
   const [amortissementsSCI_IS, setAmortissementsSCI_IS] = useState("");
   const [beneficeAvantPV, setBeneficeAvantPV] = useState("");
+  // Options Indivision / Démembrement
+  const [modeIndivision, setModeIndivision] = useState<"plein" | "indivision" | "demembrement">("plein");
+  const [typeDemembrement, setTypeDemembrement] = useState<"usufruit" | "nue-propriete">("nue-propriete");
+  const [ageUsufruitier, setAgeUsufruitier] = useState("60");
   const [activeTab, setActiveTab] = useState("result");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
@@ -192,6 +197,11 @@ export default function SimulateurBase({
   const quotePartNum = Math.min(100, Math.max(1, parseFloat(quotePart) || 100));
   const amortIS = parseFloat(amortissementsSCI_IS) || 0;
   const benAvantPV = parseFloat(beneficeAvantPV) || 0;
+  // Démembrement
+  const ageUsufruitierNum = Math.min(120, Math.max(1, parseInt(ageUsufruitier) || 60));
+  const fractionDemem = getFractionDemembrement(ageUsufruitierNum, typeDemembrement);
+  const isIndivisionMode = modeIndivision === "indivision";
+  const isDemembrementMode = modeIndivision === "demembrement";
 
   const calcOptions = {
     typeResidence: situation,
@@ -203,6 +213,9 @@ export default function SimulateurBase({
     anneesNonResident: anneesNR,
     modeAcquisition,
     quotePart: quotePartNum,
+    modeIndivision,
+    typeDemembrement,
+    ageUsufruitier: ageUsufruitierNum,
     amortissementsSCI_IS: amortIS,
     beneficeAvantPV: benAvantPV,
   };
@@ -492,6 +505,99 @@ export default function SimulateurBase({
                     {isSciIS ? "Votre part de l'IS" : `Votre quote-part de PV calculée`}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── Indivision / Démembrement ── */}
+            {showDemembrement && !isSci && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{ background: "#EEEDF5", borderLeft: "3px solid #56CBAD", borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: C.primary, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>⚖️</span><span>Mode de détention</span>
+                  </div>
+
+                  {/* Toggle plein / indivision / démembrement */}
+                  <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+                    {([
+                      { v: "plein", label: "Pleine propriété" },
+                      { v: "indivision", label: "Indivision" },
+                      { v: "demembrement", label: "Démembrement" },
+                    ] as const).map(opt => (
+                      <button key={opt.v} onClick={() => setModeIndivision(opt.v)}
+                        style={{ padding: "7px 14px", fontSize: 12, fontWeight: 600, border: `1.5px solid ${modeIndivision === opt.v ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: modeIndivision === opt.v ? C.cardAlt : C.card, color: modeIndivision === opt.v ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Indivision : quote-part */}
+                  {isIndivisionMode && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: 13 }}>
+                          Votre quote-part dans l'indivision (%)
+                          <Tip text="Votre fraction de propriété dans le bien indivis. La surtaxe s'apprécie par indivisaire — pas sur la totalité du bien. Si vous êtes seul vendeur, indiquez votre quote-part uniquement." />
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Ex : 50"
+                          min={1} max={100}
+                          value={quotePart}
+                          onChange={e => setQuotePart(e.target.value)}
+                          style={{ ...inputStyle, fontSize: 13 }}
+                        />
+                        {quotePartNum < 100 && (
+                          <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+                            Votre fraction de la PV : {quotePartNum}%
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Démembrement */}
+                  {isDemembrementMode && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: 13 }}>
+                          Vous êtes
+                          <Tip text="L'usufruitier est imposé sur la fraction usufruit. Le nu-propriétaire est imposé sur la fraction nue-propriété. Les fractions sont déterminées par le barème de l'art. 669 CGI en fonction de l'âge de l'usufruitier." />
+                        </label>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {([
+                            { v: "usufruit", label: "Usufruitier" },
+                            { v: "nue-propriete", label: "Nu-propriétaire" },
+                          ] as const).map(opt => (
+                            <button key={opt.v} onClick={() => setTypeDemembrement(opt.v)}
+                              style={{ flex: 1, padding: "8px 0", fontSize: 12, fontWeight: 600, border: `1.5px solid ${typeDemembrement === opt.v ? C.primaryMid : C.border}`, borderRadius: 6, cursor: "pointer", background: typeDemembrement === opt.v ? C.cardAlt : C.card, color: typeDemembrement === opt.v ? C.primary : C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: 13 }}>
+                          Âge de l'usufruitier
+                          <Tip text="Le barème de l'art. 669 CGI détermine la valeur de l'usufruit selon l'âge de l'usufruitier. Ex : âge ≤ 20 ans → usufruit = 90%, nue-propriété = 10%. Âge 61-70 ans → usufruit = 40%, nue-propriété = 60%." />
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Ex : 65"
+                          min={1} max={120}
+                          value={ageUsufruitier}
+                          onChange={e => setAgeUsufruitier(e.target.value)}
+                          style={{ ...inputStyle, fontSize: 13 }}
+                        />
+                        {ageUsufruitierNum > 0 && (
+                          <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4, lineHeight: 1.4 }}>
+                            Barème art. 669 CGI : Usufruit <strong>{getFractionDemembrement(ageUsufruitierNum, "usufruit")}%</strong> / Nu-propriété <strong>{getFractionDemembrement(ageUsufruitierNum, "nue-propriete")}%</strong>
+                            {" → "}Votre fraction (<strong>{typeDemembrement === "usufruit" ? "usufruit" : "nue-propriété"}</strong>) : <strong style={{ color: C.primary }}>{fractionDemem}%</strong>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

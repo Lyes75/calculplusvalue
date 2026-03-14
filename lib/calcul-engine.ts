@@ -1,7 +1,7 @@
 import {
   TAUX_IR, TAUX_IR_PAYS_NON_COOPERATIF, TAUX_PS_RESIDENT, TAUX_PS_NON_RESIDENT_EEE,
   ABAT_IR_PAR_AN, ABAT_PS_PAR_AN_6_21, ABAT_PS_22E, ABAT_PS_PAR_AN_23_30,
-  SEUIL_SURTAXE, SEUIL_EXONERATION_NR_PV,
+  SEUIL_SURTAXE, SEUIL_EXONERATION_NR_PV, BAREME_DEMEMBREMENT,
 } from "./constants";
 import type { CalculResult, ScenarioResult } from "./types";
 
@@ -55,6 +55,13 @@ function createEmptyResult(prixVenteCorrige: number, prixAchatCorrige: number, y
   };
 }
 
+// ── Barème démembrement art. 669 CGI ──────────────────────────────────────
+export function getFractionDemembrement(age: number, type: "usufruit" | "nue-propriete"): number {
+  const tranche = BAREME_DEMEMBREMENT.find(t => age <= t.ageMax);
+  if (!tranche) return type === "usufruit" ? 10 : 90;
+  return type === "usufruit" ? tranche.usufruit : tranche.nuePropriete;
+}
+
 // ── Options du moteur de calcul ────────────────────────────────────────────
 export interface ComputeOptions {
   typeResidence?: string;
@@ -67,8 +74,12 @@ export interface ComputeOptions {
   anneesNonResident?: number;
   // Donation / Succession
   modeAcquisition?: "achat" | "donation" | "succession";
+  // Indivision / Démembrement
+  quotePart?: number;             // pourcentage 0–100, défaut 100 (SCI IR + indivision)
+  modeIndivision?: "plein" | "indivision" | "demembrement";  // mode de détention
+  typeDemembrement?: "usufruit" | "nue-propriete";           // rôle du cédant
+  ageUsufruitier?: number;        // âge de l'usufruitier (barème art. 669 CGI)
   // SCI
-  quotePart?: number;             // pourcentage 0–100, défaut 100
   amortissementsSCI_IS?: number;  // amortissements cumulés (SCI IS seulement)
   beneficeAvantPV?: number;       // bénéfice imposable avant la vente (SCI IS)
 }
@@ -120,6 +131,19 @@ export function computePlusValue(
   const isSciIR = situationVendeur === "sci-ir";
   const isSciIS = situationVendeur === "sci-is";
   const quotePart = Math.min(100, Math.max(0, options?.quotePart ?? 100)) / 100; // ratio 0-1
+
+  // ── Indivision / Démembrement ──
+  const modeIndivision = options?.modeIndivision ?? "plein";
+  const isIndivision = modeIndivision === "indivision";
+  const isDemembrement = modeIndivision === "demembrement";
+  const typeDemembrement = options?.typeDemembrement ?? "nue-propriete";
+  const ageUsufruitier = options?.ageUsufruitier ?? 60;
+  // Fraction démembrement : part cédée selon barème art. 669 CGI
+  const fractionDemembrement = isDemembrement
+    ? getFractionDemembrement(ageUsufruitier, typeDemembrement) / 100
+    : 1;
+  // Ratio effectif = quotePart (indivision) ou fractionDemembrement (démembrement)
+  const ratioEffectif = isIndivision ? quotePart : (isDemembrement ? fractionDemembrement : quotePart);
 
   // ── SCI à l'IS : calcul entièrement différent ──
   if (isSciIS) {
@@ -206,7 +230,7 @@ export function computePlusValue(
     ? TAUX_PS_NON_RESIDENT_EEE   // 7,5%
     : TAUX_PS_RESIDENT;           // 17,2%
 
-  // ── Lignes spécifiques LMNP + donation/succession ──
+  // ── Lignes spécifiques LMNP + donation/succession + indivision + démembrement ──
   const lignesSpecifiques = [
     ...(isLMNP && amortissements > 0 ? [{
       label: "− Amortissements réintégrés",
@@ -221,9 +245,21 @@ export function computePlusValue(
       bold: false,
     }] : []),
     ...(isSciIR && quotePart < 1 ? [{
-      label: `Quote-part (${Math.round(quotePart * 100)}%)`,
+      label: `Quote-part SCI (${Math.round(quotePart * 100)}%)`,
       montant: fmt(pvBrute * quotePart),
       note: "Votre part de la plus-value",
+      bold: true,
+    }] : []),
+    ...(isIndivision && quotePart < 1 ? [{
+      label: `Quote-part indivision (${Math.round(quotePart * 100)}%)`,
+      montant: fmt(pvBrute * quotePart),
+      note: "Votre fraction de la plus-value",
+      bold: true,
+    }] : []),
+    ...(isDemembrement ? [{
+      label: `Fraction démembrement — ${typeDemembrement === "usufruit" ? "Usufruitier" : "Nu-propriétaire"} (${Math.round(fractionDemembrement * 100)}%)`,
+      montant: fmt(pvBrute * fractionDemembrement),
+      note: `Âge de l'usufruitier : ${ageUsufruitier} ans — art. 669 CGI`,
       bold: true,
     }] : []),
   ];
@@ -246,6 +282,29 @@ export function computePlusValue(
     warnings.push("Un représentant fiscal est obligatoire pour cette vente (prix de vente > 150 000 € — art. 244 bis A CGI).");
   }
 
+  // ── Indivision / Démembrement warnings ──
+  if (isDemembrement) {
+    if (typeDemembrement === "nue-propriete") {
+      warnings.push(
+        `En cas de cession de nue-propriété, seule la fraction correspondante (${Math.round(fractionDemembrement * 100)}% pour un usufruitier de ${ageUsufruitier} ans selon l'art. 669 CGI) est imposable. La réunion usufruit/nue-propriété (décès de l'usufruitier) est exonérée de plus-value.`
+      );
+    } else {
+      warnings.push(
+        `En cas de cession d'usufruit, la plus-value est calculée sur la fraction usufruit (${Math.round(fractionDemembrement * 100)}% pour un usufruitier de ${ageUsufruitier} ans selon l'art. 669 CGI). La durée de détention court depuis la date d'acquisition de l'usufruit.`
+      );
+    }
+  }
+  if (isIndivision && quotePart < 1) {
+    const pvBruteTotale = pvBrute;
+    const pvNetIRTotaleInd = pvBruteTotale * (1 - getAbatIR(years) / 100);
+    const pvNetIRQPInd = pvNetIRTotaleInd * quotePart;
+    if (pvNetIRTotaleInd > SEUIL_SURTAXE && pvNetIRQPInd <= SEUIL_SURTAXE) {
+      warnings.push(
+        `En indivision avec ${Math.round(quotePart * 100)}% de quote-part, votre fraction de plus-value nette (${fmt(pvNetIRQPInd)}) est sous le seuil de surtaxe de 50 000 €. La surtaxe est appréciée par indivisaire, pas sur la totalité du bien.`
+      );
+    }
+  }
+
   // ── Terrain / SCPI warnings ──
   const isTerrain = options?.typeResidence === "terrain";
   const isSCPI = options?.typeResidence === "scpi";
@@ -265,6 +324,10 @@ export function computePlusValue(
   let regime: string | undefined;
   if (isSciIR) {
     regime = "SCI à l'IR — régime des particuliers";
+  } else if (isIndivision) {
+    regime = `Indivision — quote-part ${Math.round(quotePart * 100)}%`;
+  } else if (isDemembrement) {
+    regime = `Démembrement — ${typeDemembrement === "usufruit" ? "Usufruitier" : "Nu-propriétaire"} (${Math.round(fractionDemembrement * 100)}%)`;
   } else if (isLMNP) {
     regime = "LMNP — amortissements réintégrés (réforme 2025)";
   } else if (isTerrain) {
@@ -298,9 +361,9 @@ export function computePlusValue(
   const abatIRPct = Math.min(100, getAbatIR(years));
   const abatPSPct = Math.min(100, getAbatPS(years));
 
-  // ── SCI à l'IR : calcul par quote-part ──
-  // La surtaxe s'apprécie sur la quote-part de chaque associé
-  const pvBruteQP = isSciIR ? pvBrute * quotePart : pvBrute;
+  // ── SCI à l'IR / Indivision / Démembrement : calcul par quote-part ou fraction ──
+  // La surtaxe s'apprécie par cédant (par associé SCI, par indivisaire, ou sur la fraction démembrée)
+  const pvBruteQP = (isSciIR || isIndivision || isDemembrement) ? pvBrute * ratioEffectif : pvBrute;
   const pvNetIR = pvBruteQP * (1 - abatIRPct / 100);
   const pvNetPS = pvBruteQP * (1 - abatPSPct / 100);
 
@@ -332,12 +395,13 @@ export function computePlusValue(
     warnings.push("Exonération d'IR applicable : ancien résident fiscal français, non-résident depuis moins de 10 ans, plus-value nette ≤ 150 000 €. Les prélèvements sociaux restent dus.");
   }
 
+  const showPvBruteQP = isSciIR || isIndivision || isDemembrement;
   return {
-    pvBrute: isSciIR ? pvBruteQP : pvBrute,
+    pvBrute: showPvBruteQP ? pvBruteQP : pvBrute,
     years, abatIRPct, abatPSPct,
     pvNetIR, pvNetPS, impotIR, impotPS, surtaxe, totalImpot,
     netVendeur: prixVenteCorrige - totalImpot,
-    tauxEffectif: pvBrute > 0 ? (totalImpot / pvBruteQP * 100) : 0,
+    tauxEffectif: pvBruteQP > 0 ? (totalImpot / pvBruteQP * 100) : 0,
     prixAchatCorrige, prixVenteCorrige, exonere: false,
     tauxIR, tauxPS,
     regime, lignesSpecifiques, warnings,
