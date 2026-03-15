@@ -9,6 +9,14 @@ import { getRecommendations } from "@/lib/recommendations";
 import { generatePDFContent } from "@/lib/pdf-generator";
 import { C, FORFAIT_FRAIS_ACQUISITION, FORFAIT_TRAVAUX } from "@/lib/constants";
 import type { CalculResult, ScenarioResult, Recommendation } from "@/lib/types";
+import AlertBanner from "./AlertBanner";
+import SocialProof from "./SocialProof";
+import HowItWorks from "./HowItWorks";
+import ExamplesSection from "./ExamplesSection";
+import AbattementsTable from "./AbattementsTable";
+import SimulateurCards from "./SimulateurCards";
+import FAQSection from "./FAQSection";
+import SourcesLegales from "./SourcesLegales";
 
 // ── Props ──────────────────────────────────────────────────────────────────
 export interface SimulateurBaseProps {
@@ -167,7 +175,6 @@ export default function SimulateurBase({
   const [typeDemembrement, setTypeDemembrement] = useState<"usufruit" | "nue-propriete">("nue-propriete");
   const [ageUsufruitier, setAgeUsufruitier] = useState("60");
   const [activeTab, setActiveTab] = useState("result");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
 
@@ -327,6 +334,12 @@ export default function SimulateurBase({
         </div>
       </div>
 
+      {/* ── Bandeau actualité + Social proof ── */}
+      <div style={{ paddingTop: 20 }}>
+        <AlertBanner />
+        <SocialProof />
+      </div>
+
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
 
         {/* ── Intro ── */}
@@ -352,7 +365,7 @@ export default function SimulateurBase({
         </div>
 
         {/* ── Formulaire ── */}
-        <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
+        <div data-simulator-form style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             {showTypeResidence && (
               <div>
@@ -1021,139 +1034,14 @@ export default function SimulateurBase({
         </div>
       </div>
 
-      {/* ── SEO Content ── */}
-      <div style={{ background: C.card, borderTop: `1px solid ${C.border}`, padding: "60px 24px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Comment fonctionne cette simulation de plus-value immobilière ?</h2>
-          <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.7, marginBottom: 32, maxWidth: 720 }}>
-            Notre outil de <strong>simulation plus-value immobilière</strong> calcule en temps réel l'impôt dû lors de la vente d'un bien. La plus-value immobilière est la différence entre le <strong>prix de cession corrigé</strong> (prix de vente diminué des frais) et le <strong>prix d'acquisition corrigé</strong> (prix d'achat augmenté des frais de notaire et des travaux). Elle est soumise à l'impôt sur le revenu (19%) et aux prélèvements sociaux (17,2%), soit un taux global de 36,2% avant abattements.
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginBottom: 48 }}>
-            {[
-              { step: "1", title: "Prix de cession corrigé", desc: "Partez du prix de vente, puis déduisez les frais à votre charge : diagnostics, frais d'agence vendeur, mainlevée d'hypothèque. C'est votre base de départ." },
-              { step: "2", title: "Prix d'acquisition corrigé", desc: "Ajoutez au prix d'achat les frais de notaire (forfait 7,5% ou réels) et les travaux (forfait 15% après 5 ans de détention, ou montant réel sur factures d'entreprises)." },
-              { step: "3", title: "Abattements pour durée", desc: "La plus-value brute est réduite selon la durée de détention. L'exonération totale intervient à 22 ans pour l'IR et 30 ans pour les prélèvements sociaux." },
-            ].map((item, i) => (
-              <div key={i} style={{ background: C.cardAlt, borderRadius: 12, padding: "20px 18px" }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{item.step}</div>
-                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: C.text }}>{item.title}</div>
-                <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Tableau des abattements 2026</h2>
-          <p style={{ fontSize: 14, color: C.textMuted, marginBottom: 16, lineHeight: 1.6 }}>
-            Les abattements pour durée de détention s'appliquent différemment selon qu'il s'agit de l'impôt sur le revenu (IR) ou des prélèvements sociaux (PS).
-          </p>
-          <div style={{ overflowX: "auto", marginBottom: 48 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 480 }}>
-              <thead>
-                <tr style={{ background: "#2D2B55", color: "#E0DEF0" }}>
-                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600 }}>Durée de détention</th>
-                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement IR / an</th>
-                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Abattement PS / an</th>
-                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Cumul IR</th>
-                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600 }}>Cumul PS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Moins de 6 ans", "0%", "0%", "0%", "0%"],
-                  ["6e à 21e année", "6% / an", "1,65% / an", "6% → 96%", "1,65% → 26,4%"],
-                  ["22e année", "4%", "1,60%", "100% → exonéré", "28%"],
-                  ["23e à 30e année", "—", "9% / an", "—", "28% → 100%"],
-                  ["Au-delà de 30 ans", "—", "—", "Exonéré", "Exonéré"],
-                ].map((row, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? C.cardAlt : C.card, borderBottom: `1px solid ${C.border}` }}>
-                    <td style={{ padding: "9px 14px", fontWeight: 500 }}>{row[0]}</td>
-                    <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[1]}</td>
-                    <td style={{ padding: "9px 14px", textAlign: "center", color: C.textMuted }}>{row[2]}</td>
-                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: C.accent }}>{row[3]}</td>
-                    <td style={{ padding: "9px 14px", textAlign: "center", fontWeight: 600, color: "#6E6B8A" }}>{row[4]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Questions fréquentes sur la plus-value immobilière</h2>
-          <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, margin: "0 0 24px 0" }}>Vous avez une question ? Nos réponses couvrent les cas les plus courants. Pour les situations spécifiques, consultez nos simulateurs dédiés.</p>
-          <div style={{ display: "grid", gap: 8, marginBottom: 48 }}>
-            {([
-              {
-                q: "Combien d'impôt vais-je payer sur ma plus-value immobilière ?",
-                a: (
-                  <>La plus-value immobilière est taxée à 36,2% au taux plein : 19% d&apos;impôt sur le revenu et 17,2% de prélèvements sociaux. Mais grâce aux abattements pour durée de détention, le taux effectif diminue avec le temps. Par exemple, après 15 ans de détention, le taux effectif tombe à environ 17%. Après 22 ans, l&apos;IR est totalement exonéré. Après 30 ans, plus aucun impôt. Utilisez notre simulateur ci-dessus pour calculer votre montant exact en fonction de votre situation.</>
-                ),
-              },
-              {
-                q: "Après combien d'années est-on exonéré de plus-value ?",
-                a: (
-                  <>L&apos;exonération est progressive et se fait en deux temps. L&apos;impôt sur le revenu (19%) est totalement exonéré après 22 ans de détention grâce à un abattement de 6% par an à partir de la 6e année. Les prélèvements sociaux (17,2%) sont exonérés après 30 ans, avec un abattement plus lent. Entre 22 et 30 ans, vous ne payez plus que les prélèvements sociaux sur un montant réduit. Notre onglet &quot;Scénarios&quot; vous montre l&apos;évolution de l&apos;impôt année par année.</>
-                ),
-              },
-              {
-                q: "Comment réduire le montant de ma plus-value imposable ?",
-                a: (
-                  <>Quatre leviers principaux. Premièrement, déduisez vos frais d&apos;acquisition : forfait 7,5% du prix d&apos;achat ou frais de notaire réels si plus élevés. Deuxièmement, déduisez vos travaux : forfait 15% si vous détenez le bien depuis plus de 5 ans, ou montant réel avec factures d&apos;entreprises. Troisièmement, déduisez vos frais de cession : diagnostics, frais d&apos;agence à votre charge, mainlevée d&apos;hypothèque. Quatrièmement, si possible, attendez un seuil d&apos;abattement favorable — notre comparateur de scénarios vous indique l&apos;économie potentielle en décalant la vente de 1 à 5 ans.</>
-                ),
-              },
-              {
-                q: "La plus-value est-elle imposée si je vends ma résidence principale ?",
-                a: (
-                  <>Non. La vente de votre résidence principale est totalement exonérée d&apos;impôt sur la plus-value, quelle que soit la durée de détention et quel que soit le montant du gain. C&apos;est l&apos;exonération la plus courante. Le bien doit être votre résidence principale effective au jour de la vente. Si vous avez déménagé avant la vente, un délai raisonnable est toléré (généralement un an) à condition de ne pas avoir loué le bien entre-temps. Découvrez tous les cas d&apos;exonération sur notre page dédiée. <a href="/exonerations-plus-value" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Voir les exonérations de plus-value →</a></>
-                ),
-              },
-              {
-                q: "Que change la réforme LMNP 2025 pour la plus-value ?",
-                a: (
-                  <>Depuis la loi de finances 2025, les amortissements déduits en LMNP sont réintégrés dans le calcul de la plus-value. Concrètement, votre prix d&apos;acquisition est réduit du montant des amortissements que vous avez déduits de vos revenus locatifs, ce qui augmente mécaniquement votre plus-value imposable. Par exemple, pour un bien acheté 200 000€ avec 50 000€ d&apos;amortissements cumulés, la base de calcul de la plus-value part de 150 000€ au lieu de 200 000€. Simulez l&apos;impact exact avec notre simulateur LMNP dédié. <a href="/plus-value-lmnp" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur plus-value LMNP →</a></>
-                ),
-              },
-              {
-                q: "Un non-résident paie-t-il le même impôt sur la plus-value ?",
-                a: (
-                  <>Pas exactement. Le taux d&apos;IR reste à 19%, mais les prélèvements sociaux sont réduits à 7,5% (au lieu de 17,2%) pour les non-résidents affiliés à un régime de sécurité sociale UE/EEE/Suisse. Le taux total passe donc de 36,2% à 26,5%. De plus, les anciens résidents fiscaux français peuvent bénéficier d&apos;une exonération jusqu&apos;à 150 000€ de plus-value nette sous conditions. Calculez votre impôt avec notre simulateur non-résident. <a href="/plus-value-non-resident" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur plus-value non-résident →</a></>
-                ),
-              },
-              {
-                q: "Comment est calculée la plus-value d'un bien reçu en héritage ?",
-                a: (
-                  <>Pour un bien reçu par succession, le prix d&apos;acquisition retenu est la valeur déclarée dans la déclaration de succession, pas le prix payé par le défunt à l&apos;origine. La durée de détention court depuis la date du décès. Seuls les frais réels sont déductibles (droits de succession payés + frais de notaire) — le forfait 7,5% ne s&apos;applique pas. Si la valeur déclarée était faible, la plus-value sera mécaniquement plus élevée. Utilisez notre simulateur donation/succession pour le calcul exact. <a href="/plus-value-donation-succession" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur donation / succession →</a></>
-                ),
-              },
-              {
-                q: "Qu'est-ce que la surtaxe sur les plus-values supérieures à 50 000€ ?",
-                a: (
-                  <>Lorsque votre plus-value nette imposable (après abattements pour durée de détention) dépasse 50 000€, une surtaxe progressive de 2% à 6% s&apos;ajoute à l&apos;IR et aux PS. Elle est calculée sur le montant total de la plus-value nette, pas sur la fraction au-dessus de 50 000€. En indivision, le seuil s&apos;apprécie par vendeur — à deux propriétaires, vous pouvez y échapper si la part de chacun reste sous 50 000€. Notre simulateur calcule automatiquement cette surtaxe et vous alerte si elle s&apos;applique.</>
-                ),
-              },
-            ] as { q: string; a: React.ReactNode }[]).map((item, i) => (
-              <div key={i} style={{ background: C.card, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ width: "100%", padding: "16px 18px", background: "none", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  <span style={{ fontWeight: 600, fontSize: 16, color: C.text }}>{item.q}</span>
-                  <span style={{ fontSize: 20, color: C.accent, flexShrink: 0, lineHeight: 1, transition: "transform 0.3s" }}>{openFaq === i ? "−" : "+"}</span>
-                </button>
-                <div style={{ maxHeight: openFaq === i ? 500 : 0, overflow: "hidden", transition: "max-height 0.3s ease" }}>
-                  <div style={{ padding: "0 18px 16px", fontSize: 14, color: C.textMuted, lineHeight: 1.7 }}>{item.a}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: C.cardAlt, borderRadius: 12, padding: "20px 18px", border: `1px solid ${C.border}` }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 8 }}>📚 Références légales et sources</div>
-            <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.8 }}>
-              <strong>Code général des impôts :</strong> Art. 150 U à 150 VH (plus-values immobilières des particuliers) • Art. 150 VC (abattements pour durée de détention) • Art. 200 B (taux d'imposition de 19%) • Art. 1609 nonies G (surtaxe progressive)<br />
-              <strong>Prélèvements sociaux :</strong> CSG 9,2% + CRDS 0,5% + prélèvement de solidarité 7,5% = 17,2% (art. L136-7 CSS)<br />
-              <strong>Barème :</strong> En vigueur au 1er janvier 2026 — <a href="https://www.impots.gouv.fr" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>impots.gouv.fr</a>
-            </div>
-          </div>
-        </div>
+      {/* ── SEO Content Sections ── */}
+      <div style={{ background: C.card, borderTop: `1px solid ${C.border}`, paddingTop: 20, paddingBottom: 60 }}>
+        <HowItWorks />
+        <ExamplesSection />
+        <AbattementsTable />
+        <SimulateurCards />
+        <FAQSection />
+        <SourcesLegales />
       </div>
 
     </div>
