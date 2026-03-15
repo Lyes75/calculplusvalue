@@ -154,7 +154,6 @@ export default function RootLayout({
                 { href: "/plus-value-scpi", label: "Plus-value SCPI" },
                 { href: "/plus-value-indivision", label: "Indivision & Démembrement" },
                 { href: "/exonerations-plus-value", label: "Guide Exonérations" },
-                { href: "/mentions-legales", label: "Mentions légales" },
               ].map((link) => (
                 <a
                   key={link.href}
