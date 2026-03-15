@@ -172,8 +172,10 @@ export default function RootLayout({
                 Les simulations proposées par calculplusvalue.fr sont fournies à titre indicatif et ne constituent pas un conseil fiscal ou juridique. Elles sont basées sur les barèmes en vigueur au 1er janvier 2026 (art. 150 U à 150 VH du CGI). Pour tout calcul définitif, consultez votre notaire ou un conseiller fiscal agréé.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 11, color: "#6E6B8A" }}>
+                <span style={{ fontSize: 11, color: "#6E6B8A", display: "flex", alignItems: "center", gap: 8 }}>
                   © {new Date().getFullYear()} calculplusvalue.fr — Tous droits réservés
+                  <span style={{ color: "#4a4870" }}>|</span>
+                  <a href="/mentions-legales" style={{ color: "#9B97C4", textDecoration: "none" }}>Mentions légales</a>
                 </span>
                 <span style={{ fontSize: 11, color: "#6E6B8A" }}>
                   Simulation indicative — Non contractuelle
