@@ -93,6 +93,8 @@ export default function ExamplesSection() {
                 border: `1px solid ${C.border}`,
                 borderRadius: 12,
                 overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               {/* Header */}
@@ -102,7 +104,7 @@ export default function ExamplesSection() {
               </div>
 
               {/* Calcul details */}
-              <div style={{ padding: "16px" }}>
+              <div style={{ padding: "16px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <tbody>
                     {[
@@ -154,7 +156,7 @@ export default function ExamplesSection() {
                 <button
                   onClick={scrollToSimulator}
                   style={{
-                    marginTop: 14,
+                    marginTop: "auto",
                     width: "100%",
                     padding: "10px 16px",
                     background: "none",
