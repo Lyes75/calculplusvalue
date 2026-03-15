@@ -167,6 +167,7 @@ export default function SimulateurBase({
   const [typeDemembrement, setTypeDemembrement] = useState<"usufruit" | "nue-propriete">("nue-propriete");
   const [ageUsufruitier, setAgeUsufruitier] = useState("60");
   const [activeTab, setActiveTab] = useState("result");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
 
@@ -1076,22 +1077,71 @@ export default function SimulateurBase({
             </table>
           </div>
 
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 24, marginTop: 0 }}>Questions fréquentes</h2>
-          <div style={{ display: "grid", gap: 14, marginBottom: 48 }}>
-            {[
-              { q: "La résidence principale est-elle exonérée de plus-value ?", a: "Oui, totalement. La vente de votre résidence principale bénéficie d'une exonération totale d'impôt sur la plus-value, quelle que soit la durée de détention et le montant de la plus-value réalisée (art. 150 U II 1° du CGI). Il faut que le bien soit votre résidence habituelle et effective au moment de la cession." },
-              { q: "Peut-on déduire les travaux pour réduire la plus-value ?", a: "Oui. Vous pouvez déduire les dépenses de travaux de construction, reconstruction, agrandissement ou amélioration réalisés par une entreprise (sur factures). Si vous détenez le bien depuis plus de 5 ans, vous pouvez opter pour le forfait de 15% du prix d'achat sans justificatif, si ce montant est plus avantageux." },
-              { q: "Qu'est-ce que la surtaxe sur les plus-values élevées ?", a: "Une surtaxe progressive s'applique lorsque la plus-value nette imposable à l'IR dépasse 50 000 €. Elle va de 2% (entre 50 001 et 100 000 €) à 6% (au-delà de 250 000 €). Elle est calculée sur la totalité de la plus-value nette IR dès le premier euro dès lors que le seuil est franchi." },
-              { q: "Comment sont calculés les frais de notaire forfaitaires ?", a: "Le forfait de frais d'acquisition est fixé à 7,5% du prix d'achat. Il comprend les droits de mutation, les émoluments du notaire et les frais divers. Vous pouvez utiliser ce forfait même sans justificatifs, ou opter pour les frais réels s'ils sont supérieurs (cas rare pour les biens anciens)." },
-              { q: "Quand la plus-value est-elle totalement exonérée ?", a: "L'exonération totale d'impôt sur le revenu (19%) intervient après 22 ans de détention. Pour les prélèvements sociaux (17,2%), il faut attendre 30 ans. Au-delà de ces durées, aucun impôt n'est dû sur la plus-value, quelle que soit son montant." },
-            ].map((item, i) => (
-              <details key={i} style={{ background: C.cardAlt, borderRadius: 10, padding: "16px 18px", border: `1px solid ${C.border}`, cursor: "pointer" }}>
-                <summary style={{ fontWeight: 600, fontSize: 14, color: C.text, listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  {item.q}
-                  <span style={{ fontSize: 18, color: C.accent, flexShrink: 0 }}>+</span>
-                </summary>
-                <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.7, marginTop: 12, marginBottom: 0 }}>{item.a}</p>
-              </details>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>Questions fréquentes sur la plus-value immobilière</h2>
+          <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, margin: "0 0 24px 0" }}>Vous avez une question ? Nos réponses couvrent les cas les plus courants. Pour les situations spécifiques, consultez nos simulateurs dédiés.</p>
+          <div style={{ display: "grid", gap: 8, marginBottom: 48 }}>
+            {([
+              {
+                q: "Combien d'impôt vais-je payer sur ma plus-value immobilière ?",
+                a: (
+                  <>La plus-value immobilière est taxée à 36,2% au taux plein : 19% d&apos;impôt sur le revenu et 17,2% de prélèvements sociaux. Mais grâce aux abattements pour durée de détention, le taux effectif diminue avec le temps. Par exemple, après 15 ans de détention, le taux effectif tombe à environ 17%. Après 22 ans, l&apos;IR est totalement exonéré. Après 30 ans, plus aucun impôt. Utilisez notre simulateur ci-dessus pour calculer votre montant exact en fonction de votre situation.</>
+                ),
+              },
+              {
+                q: "Après combien d'années est-on exonéré de plus-value ?",
+                a: (
+                  <>L&apos;exonération est progressive et se fait en deux temps. L&apos;impôt sur le revenu (19%) est totalement exonéré après 22 ans de détention grâce à un abattement de 6% par an à partir de la 6e année. Les prélèvements sociaux (17,2%) sont exonérés après 30 ans, avec un abattement plus lent. Entre 22 et 30 ans, vous ne payez plus que les prélèvements sociaux sur un montant réduit. Notre onglet &quot;Scénarios&quot; vous montre l&apos;évolution de l&apos;impôt année par année.</>
+                ),
+              },
+              {
+                q: "Comment réduire le montant de ma plus-value imposable ?",
+                a: (
+                  <>Quatre leviers principaux. Premièrement, déduisez vos frais d&apos;acquisition : forfait 7,5% du prix d&apos;achat ou frais de notaire réels si plus élevés. Deuxièmement, déduisez vos travaux : forfait 15% si vous détenez le bien depuis plus de 5 ans, ou montant réel avec factures d&apos;entreprises. Troisièmement, déduisez vos frais de cession : diagnostics, frais d&apos;agence à votre charge, mainlevée d&apos;hypothèque. Quatrièmement, si possible, attendez un seuil d&apos;abattement favorable — notre comparateur de scénarios vous indique l&apos;économie potentielle en décalant la vente de 1 à 5 ans.</>
+                ),
+              },
+              {
+                q: "La plus-value est-elle imposée si je vends ma résidence principale ?",
+                a: (
+                  <>Non. La vente de votre résidence principale est totalement exonérée d&apos;impôt sur la plus-value, quelle que soit la durée de détention et quel que soit le montant du gain. C&apos;est l&apos;exonération la plus courante. Le bien doit être votre résidence principale effective au jour de la vente. Si vous avez déménagé avant la vente, un délai raisonnable est toléré (généralement un an) à condition de ne pas avoir loué le bien entre-temps. Découvrez tous les cas d&apos;exonération sur notre page dédiée. <a href="/exonerations-plus-value" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Voir les exonérations de plus-value →</a></>
+                ),
+              },
+              {
+                q: "Que change la réforme LMNP 2025 pour la plus-value ?",
+                a: (
+                  <>Depuis la loi de finances 2025, les amortissements déduits en LMNP sont réintégrés dans le calcul de la plus-value. Concrètement, votre prix d&apos;acquisition est réduit du montant des amortissements que vous avez déduits de vos revenus locatifs, ce qui augmente mécaniquement votre plus-value imposable. Par exemple, pour un bien acheté 200 000€ avec 50 000€ d&apos;amortissements cumulés, la base de calcul de la plus-value part de 150 000€ au lieu de 200 000€. Simulez l&apos;impact exact avec notre simulateur LMNP dédié. <a href="/plus-value-lmnp" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur plus-value LMNP →</a></>
+                ),
+              },
+              {
+                q: "Un non-résident paie-t-il le même impôt sur la plus-value ?",
+                a: (
+                  <>Pas exactement. Le taux d&apos;IR reste à 19%, mais les prélèvements sociaux sont réduits à 7,5% (au lieu de 17,2%) pour les non-résidents affiliés à un régime de sécurité sociale UE/EEE/Suisse. Le taux total passe donc de 36,2% à 26,5%. De plus, les anciens résidents fiscaux français peuvent bénéficier d&apos;une exonération jusqu&apos;à 150 000€ de plus-value nette sous conditions. Calculez votre impôt avec notre simulateur non-résident. <a href="/plus-value-non-resident" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur plus-value non-résident →</a></>
+                ),
+              },
+              {
+                q: "Comment est calculée la plus-value d'un bien reçu en héritage ?",
+                a: (
+                  <>Pour un bien reçu par succession, le prix d&apos;acquisition retenu est la valeur déclarée dans la déclaration de succession, pas le prix payé par le défunt à l&apos;origine. La durée de détention court depuis la date du décès. Seuls les frais réels sont déductibles (droits de succession payés + frais de notaire) — le forfait 7,5% ne s&apos;applique pas. Si la valeur déclarée était faible, la plus-value sera mécaniquement plus élevée. Utilisez notre simulateur donation/succession pour le calcul exact. <a href="/plus-value-donation-succession" style={{ color: C.accent, fontWeight: 600, textDecoration: "none" }}>Simulateur donation / succession →</a></>
+                ),
+              },
+              {
+                q: "Qu'est-ce que la surtaxe sur les plus-values supérieures à 50 000€ ?",
+                a: (
+                  <>Lorsque votre plus-value nette imposable (après abattements pour durée de détention) dépasse 50 000€, une surtaxe progressive de 2% à 6% s&apos;ajoute à l&apos;IR et aux PS. Elle est calculée sur le montant total de la plus-value nette, pas sur la fraction au-dessus de 50 000€. En indivision, le seuil s&apos;apprécie par vendeur — à deux propriétaires, vous pouvez y échapper si la part de chacun reste sous 50 000€. Notre simulateur calcule automatiquement cette surtaxe et vous alerte si elle s&apos;applique.</>
+                ),
+              },
+            ] as { q: string; a: React.ReactNode }[]).map((item, i) => (
+              <div key={i} style={{ background: C.card, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{ width: "100%", padding: "16px 18px", background: "none", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: 16, color: C.text }}>{item.q}</span>
+                  <span style={{ fontSize: 20, color: C.accent, flexShrink: 0, lineHeight: 1, transition: "transform 0.3s" }}>{openFaq === i ? "−" : "+"}</span>
+                </button>
+                <div style={{ maxHeight: openFaq === i ? 500 : 0, overflow: "hidden", transition: "max-height 0.3s ease" }}>
+                  <div style={{ padding: "0 18px 16px", fontSize: 14, color: C.textMuted, lineHeight: 1.7 }}>{item.a}</div>
+                </div>
+              </div>
             ))}
           </div>
 
