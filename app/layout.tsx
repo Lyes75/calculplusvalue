@@ -175,6 +175,8 @@ export default function RootLayout({
                   © {new Date().getFullYear()} calculplusvalue.fr — Tous droits réservés
                   <span style={{ color: "#4a4870" }}>|</span>
                   <a href="/mentions-legales" style={{ color: "#9B97C4", textDecoration: "none" }}>Mentions légales</a>
+                  <span style={{ color: "#4a4870" }}>|</span>
+                  <span style={{ color: "#9B97C4" }}>contact<span style={{ display: "none" }}>nospam</span>&#64;calculplusvalue&#46;fr</span>
                 </span>
                 <span style={{ fontSize: 11, color: "#6E6B8A" }}>
                   Simulation indicative — Non contractuelle
