@@ -26,26 +26,26 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "La plus-value sur un terrain est-elle imposée comme un appartement ?",
+      name: "Pourquoi le forfait 15% travaux ne s'applique-t-il pas aux terrains ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Oui, le régime fiscal est identique : taux IR de 19%, prélèvements sociaux de 17,2%, abattements pour durée de détention (exonération IR à 22 ans, PS à 30 ans), surtaxe progressive au-delà de 50 000 € de plus-value nette. La seule différence est que le forfait de 15% pour travaux ne s'applique pas aux terrains non bâtis — seuls les travaux réels justifiés par factures (viabilisation, clôture, bornage...) sont déductibles.",
+        text: "Le forfait de 15% est prévu par l'article 150 VB II 4° du CGI pour couvrir les travaux de construction, reconstruction, agrandissement ou amélioration réalisés sur un bien bâti. Un terrain nu n'étant pas un bien bâti, ce forfait n'est pas applicable. En revanche, si vous avez réalisé des travaux sur le terrain (viabilisation, raccordement aux réseaux, bornage, clôture, drainage), vous pouvez les déduire pour leur montant réel sur présentation de factures d'entreprises. Les travaux réalisés par vous-même ne sont pas déductibles.",
       },
     },
     {
       "@type": "Question",
-      name: "Le forfait 15% pour travaux s'applique-t-il à un terrain ?",
+      name: "Comment calcule-t-on la plus-value lors d'une division parcellaire ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Non. Le forfait de 15% du prix d'achat pour les travaux est réservé aux biens bâtis (appartements, maisons). Il ne s'applique pas aux terrains non bâtis. Pour un terrain, seuls les travaux réels réalisés par une entreprise et justifiés par des factures sont déductibles : viabilisation, raccordements, clôtures, drainage, géomètre-expert pour le bornage. En revanche, le forfait de frais d'acquisition de 7,5% reste applicable.",
+        text: "Le prix d'acquisition du terrain vendu est calculé au prorata de la surface cédée par rapport à la surface totale du bien au moment de l'achat. Par exemple, si vous avez acheté une maison sur 1 000 m² pour 300 000€ et que vous vendez 300 m² de jardin, le prix d'acquisition retenu est 300 000 × (300/1000) = 90 000€. La durée de détention court depuis la date d'achat initiale du bien (pas depuis la date du permis d'aménager ou du bornage).",
       },
     },
     {
       "@type": "Question",
-      name: "Peut-on vendre une partie de son jardin sans payer de plus-value ?",
+      name: "La vente d'une partie de mon jardin est-elle exonérée comme ma résidence principale ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Si le jardin est vendu en même temps que la résidence principale et constitue une dépendance immédiate et nécessaire de celle-ci, l'exonération résidence principale s'applique. Si le jardin est vendu séparément, la plus-value est imposable. Le prix d'acquisition du terrain cédé se calcule au prorata de la surface cédée par rapport à la surface totale du bien (ex : vous cédez 1/3 de la parcelle → 1/3 du prix d'achat initial). Si le prix de cession ne dépasse pas 15 000 €, une exonération totale s'applique.",
+        text: "Pas automatiquement. L'exonération résidence principale peut s'appliquer au terrain attenant SI deux conditions sont réunies : le terrain doit constituer une dépendance immédiate et nécessaire de la résidence principale, ET la cession du terrain doit être simultanée à la vente de la maison. Si vous vendez uniquement le terrain sans vendre la maison, l'exonération RP ne s'applique pas. Vous pouvez toutefois bénéficier de l'exonération si le prix de cession est ≤ 15 000€ (art. 150 U II 6° CGI).",
       },
     },
     {
@@ -53,7 +53,31 @@ const faqJsonLd = {
       name: "Qu'est-ce que la taxe communale sur les terrains devenus constructibles ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "L'article 1529 du CGI permet aux communes d'instaurer une taxe forfaitaire de 10% sur la plus-value brute réalisée lors de la première cession d'un terrain nu rendu constructible suite à un classement ou reclassement par un plan local d'urbanisme (PLU). Cette taxe est facultative — seules les communes ayant délibéré en ce sens l'appliquent. Elle s'ajoute à l'impôt classique sur la plus-value. Des exonérations existent (détention > 18 ans depuis le classement, prix ≤ 15 000 €). Vérifiez auprès de votre mairie avant la vente.",
+        text: "C'est une taxe facultative de 10% instituée par l'article 1529 du CGI. Elle frappe la plus-value brute des terrains nus rendus constructibles par une modification du PLU. Elle ne s'applique que dans les communes qui ont délibéré en ce sens. Elle s'ajoute à l'impôt sur la PV classique (IR + PS). Exonérations : détention > 18 ans depuis le classement constructible, prix de cession ≤ 15 000€, ou classement intervenu avant le 13 janvier 2010. Vérifiez auprès de votre mairie. Notre simulateur ne calcule pas cette taxe.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "La viabilisation d'un terrain est-elle déductible de la plus-value ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Oui, si elle a été réalisée par une entreprise et que vous disposez des factures. Les travaux de viabilisation déductibles comprennent : le raccordement au réseau d'eau potable, au réseau d'assainissement, au réseau électrique, au réseau de gaz, et au réseau de télécommunications. Les frais de géomètre-expert pour le bornage, les frais de clôture et les travaux de drainage sont également déductibles. Conservez toutes vos factures — le notaire les demandera au moment de la vente.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Un terrain agricole est-il soumis à la plus-value immobilière ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Oui, la vente d'un terrain agricole par un particulier (non exploitant agricole) est soumise au régime des plus-values immobilières des particuliers, comme tout autre terrain. Les mêmes abattements pour durée de détention s'appliquent. Si le terrain est exploité dans le cadre d'une activité agricole professionnelle, le régime des plus-values professionnelles peut s'appliquer (avec des exonérations spécifiques). Pour les petits terrains agricoles vendus ≤ 15 000€, l'exonération totale s'applique.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Comment est imposée la vente d'un terrain reçu en donation ou succession ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Le calcul combine les règles du terrain (pas de forfait 15%) et celles de la donation/succession (valeur déclarée dans l'acte, frais réels uniquement, durée de détention depuis la transmission). Concrètement, le forfait 7,5% ne s'applique pas non plus (car c'est une transmission gratuite) et le forfait 15% travaux non plus (car c'est un terrain). Seuls les droits de mutation réellement payés et les travaux réels facturés sont déductibles. C'est le cas le plus défavorable en termes de déductions.",
       },
     },
   ],
