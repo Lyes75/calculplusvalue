@@ -218,6 +218,15 @@ export default function SCIClient() {
         showSituationVendeur={true}
         showQuotePart={true}
         showSCI_IS_Options={true}
+        heroEyebrow="Simulateur SCI — IR et IS"
+        heroTitle="Plus-value en SCI : comparez les régimes IR et IS"
+        heroDescription="Calcul par quote-part, comparaison régime des particuliers vs impôt sur les sociétés, impact des amortissements en SCI IS."
+        heroBadges={[
+          { icon: "⚖️", label: "Comparaison IR vs IS" },
+          { icon: "👥", label: "Calcul par quote-part" },
+          { icon: "📐", label: "Barèmes CGI 2026" },
+          { icon: "📄", label: "Export PDF" },
+        ]}
         caseBadge={{ label: "SCI — choisissez IR ou IS", color: "#2D2B55" }}
       />
       <ContentSCI />

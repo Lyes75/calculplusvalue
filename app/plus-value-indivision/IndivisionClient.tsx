@@ -225,6 +225,15 @@ export default function IndivisionClient() {
         defaultType="secondaire"
         showTypeResidence={true}
         showDemembrement={true}
+        heroEyebrow="Simulateur indivision & démembrement"
+        heroTitle="Plus-value en indivision ou en démembrement"
+        heroDescription="Le seuil de surtaxe s'apprécie par quote-part en indivision. En démembrement, le barème fiscal de l'art. 669 CGI détermine la répartition entre nu-propriétaire et usufruitier."
+        heroBadges={[
+          { icon: "👥", label: "Calcul par quote-part" },
+          { icon: "⚖️", label: "Barème art. 669 CGI" },
+          { icon: "📐", label: "Barèmes 2026" },
+          { icon: "📄", label: "Export PDF" },
+        ]}
         caseBadge={{ label: "Indivision & Démembrement — calcul par fraction", color: "#2D2B55" }}
       />
       <ContentIndivision />

@@ -38,6 +38,11 @@ export interface SimulateurBaseProps {
   disableForfaitFrais?: boolean;
   caseBadge?: { label: string; color: string };
   children?: React.ReactNode;
+  // Props de personnalisation du hero (bandeau haut)
+  heroEyebrow?: string;
+  heroTitle?: string;
+  heroDescription?: string;
+  heroBadges?: { icon: string; label: string }[];
   // Props de personnalisation pour les pages spécialisées
   customTitle?: string;
   customSubtitle?: string;
@@ -157,6 +162,10 @@ export default function SimulateurBase({
   labelPrixAchat,
   labelFraisAcquisition,
   caseBadge,
+  heroEyebrow,
+  heroTitle,
+  heroDescription,
+  heroBadges,
   customTitle,
   customSubtitle,
   customBadges,
@@ -370,18 +379,18 @@ export default function SimulateurBase({
       <div style={{ background: "linear-gradient(135deg, #2D2B55 0%, #3F3D6E 100%)", padding: "28px 24px 40px", color: "#E0DEF0" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <img src="/logo.svg" alt="calculplusvalue.fr" style={{ height: 48, width: "auto", marginBottom: 16 }} />
-          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#9B97C4", marginBottom: 12 }}>Simulation plus-value immobilière — Gratuit 2026</div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15, color: "#E0DEF0" }}>Simulation de plus-value immobilière</h1>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#9B97C4", marginBottom: 12 }}>{heroEyebrow || "Simulation plus-value immobilière — Gratuit 2026"}</div>
+          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 400, margin: 0, lineHeight: 1.15, color: "#E0DEF0" }}>{heroTitle || "Simulation de plus-value immobilière"}</h1>
           <p style={{ fontSize: 16, color: "#9B97C4", marginTop: 12, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
-            Estimez votre impôt sur la plus-value en quelques secondes. Abattements pour durée de détention, surtaxe, résidence principale : toutes les règles fiscales 2026 appliquées automatiquement.
+            {heroDescription || "Estimez votre impôt sur la plus-value en quelques secondes. Abattements pour durée de détention, surtaxe, résidence principale : toutes les règles fiscales 2026 appliquées automatiquement."}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {[
+            {(heroBadges || [
               { icon: "⚡", label: "Résultat instantané" },
               { icon: "📐", label: "Barèmes CGI 2026" },
               { icon: "🔒", label: "100% gratuit, sans inscription" },
               { icon: "📄", label: "Export PDF inclus" },
-            ].map((b, i) => (
+            ]).map((b, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 500, color: "#E0DEF0" }}>
                 <span>{b.icon}</span><span>{b.label}</span>
               </div>

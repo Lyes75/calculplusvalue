@@ -209,6 +209,15 @@ export default function SCPIClient() {
         disableForfaitTravaux={true}
         labelPrixAchat="Prix d'acquisition des parts"
         labelFraisAcquisition="Frais de souscription"
+        heroEyebrow="Simulateur cession de parts SCPI"
+        heroTitle="Plus-value sur la revente de parts de SCPI"
+        heroDescription="Régime des plus-values des particuliers. Les frais de souscription (8-12%) sont souvent plus avantageux que le forfait 7,5%. Pas de forfait travaux applicable."
+        heroBadges={[
+          { icon: "📈", label: "Frais de souscription déductibles" },
+          { icon: "📐", label: "Barèmes CGI 2026" },
+          { icon: "🔒", label: "Gratuit, sans inscription" },
+          { icon: "📄", label: "Export PDF inclus" },
+        ]}
         caseBadge={{ label: "Parts de SCPI — régime des particuliers", color: "#2D2B55" }}
       />
       <ContentSCPI />

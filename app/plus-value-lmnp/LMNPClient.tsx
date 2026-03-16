@@ -683,6 +683,15 @@ export default function LMNPClient() {
         defaultType="lmnp"
         showTypeResidence={false}
         showAmortissementsLMNP={true}
+        heroEyebrow="Simulateur LMNP — Réforme 2025 prise en compte"
+        heroTitle="Plus-value LMNP : calculez l'impact des amortissements"
+        heroDescription="Depuis la loi de finances 2025, les amortissements déduits en location meublée sont réintégrés dans le calcul de la plus-value. Ce simulateur calcule l'impact exact sur votre impôt, avec comparaison avant/après réforme."
+        heroBadges={[
+          { icon: "⚠️", label: "Réforme 2025 intégrée" },
+          { icon: "📊", label: "Comparaison avant/après" },
+          { icon: "🧮", label: "Amortissements réintégrés" },
+          { icon: "📄", label: "Export PDF inclus" },
+        ]}
         caseBadge={{
           label: "Régime LMNP — amortissements réintégrés (réforme 2025)",
           color: "menthe",

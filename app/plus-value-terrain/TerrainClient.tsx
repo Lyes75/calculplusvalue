@@ -172,6 +172,15 @@ export default function TerrainClient() {
         defaultType="terrain"
         showTypeResidence={false}
         disableForfaitTravaux={true}
+        heroEyebrow="Simulateur terrain constructible"
+        heroTitle="Plus-value sur la vente d'un terrain"
+        heroDescription="Même régime que les biens bâtis, avec une exception : le forfait 15% travaux ne s'applique pas aux terrains non bâtis. Frais de viabilisation et bornage déductibles sur factures."
+        heroBadges={[
+          { icon: "🌱", label: "Forfait travaux non applicable" },
+          { icon: "📐", label: "Barèmes CGI 2026" },
+          { icon: "🔒", label: "Gratuit, sans inscription" },
+          { icon: "📄", label: "Export PDF inclus" },
+        ]}
         caseBadge={{ label: "Terrain — forfait travaux non applicable", color: "#2D2B55" }}
       />
       <ContentTerrain />

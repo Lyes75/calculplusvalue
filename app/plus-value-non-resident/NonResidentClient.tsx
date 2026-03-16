@@ -168,6 +168,15 @@ export default function NonResidentClient() {
         showTypeResidence={true}
         showSituationVendeur={true}
         showNonResidentOptions={true}
+        heroEyebrow="Simulateur non-résident — Taux adaptés"
+        heroTitle="Plus-value immobilière pour non-résidents et expatriés"
+        heroDescription="Taux de PS réduit à 7,5% pour les résidents UE/EEE, exonération jusqu'à 150 000€ pour les anciens résidents fiscaux, obligations de représentant fiscal."
+        heroBadges={[
+          { icon: "🌍", label: "Taux PS réduit UE/EEE" },
+          { icon: "💶", label: "Exonération 150K€" },
+          { icon: "📐", label: "Barèmes CGI 2026" },
+          { icon: "📄", label: "Export PDF" },
+        ]}
         caseBadge={{
           label: "Non-résident — taux PS adaptés",
           color: "indigo",

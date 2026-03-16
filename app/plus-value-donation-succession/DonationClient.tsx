@@ -203,6 +203,15 @@ export default function DonationClient() {
         disableForfaitFrais={true}
         labelPrixAchat="Valeur déclarée dans l'acte"
         labelFraisAcquisition="Frais réels (droits de mutation + notaire)"
+        heroEyebrow="Simulateur donation & succession"
+        heroTitle="Plus-value sur un bien hérité ou reçu en donation"
+        heroDescription="Le prix d'acquisition retenu est la valeur déclarée dans l'acte. Frais réels uniquement (pas de forfait 7,5%). Durée de détention depuis la date du décès ou de la donation."
+        heroBadges={[
+          { icon: "🎁", label: "Valeur déclarée dans l'acte" },
+          { icon: "📋", label: "Frais réels uniquement" },
+          { icon: "📐", label: "Barèmes CGI 2026" },
+          { icon: "📄", label: "Export PDF" },
+        ]}
         caseBadge={{
           label: "Bien reçu par donation ou succession",
           color: "menthe",
