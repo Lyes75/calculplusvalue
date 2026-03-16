@@ -28,42 +28,58 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Comment calculer la plus-value d'un bien hérité ?",
+      name: "Peut-on utiliser le forfait de 7,5% pour les frais d'acquisition d'un bien hérité ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La plus-value d'un bien hérité est égale à la différence entre le prix de vente corrigé (prix de vente moins les frais à votre charge) et le prix d'acquisition corrigé. Pour un bien hérité, le prix d'acquisition est la valeur vénale déclarée dans la déclaration de succession, majorée des droits de succession effectivement payés par l'héritier vendeur et des travaux déductibles. Les mêmes abattements pour durée de détention s'appliquent, depuis la date du décès.",
+        text: "Non. Le forfait de 7,5% est réservé aux acquisitions à titre onéreux (achat). Pour un bien reçu par donation ou succession, seuls les frais réellement engagés et payés par le vendeur (héritier ou donataire) sont déductibles. Il s'agit principalement des droits de mutation à titre gratuit et des frais de notaire liés à l'acte. Si le donateur a pris les droits à sa charge, le donataire ne peut pas les déduire.",
       },
     },
     {
       "@type": "Question",
-      name: "Le forfait 7,5% s'applique-t-il en cas de succession ?",
+      name: "La durée de détention repart-elle à zéro après une donation ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Non. Le forfait de frais d'acquisition de 7,5% est réservé aux acquisitions à titre onéreux (achat classique). En cas de succession ou de donation, seuls les frais réellement payés sont déductibles : les droits de mutation à titre gratuit (droits de succession ou de donation) effectivement supportés par le vendeur, et les frais de notaire réels. En revanche, le forfait travaux de 15% reste applicable si la durée de détention dépasse 5 ans.",
+        text: "Oui. En cas de donation, la durée de détention pour le calcul des abattements court à partir de la date de l'acte notarié de donation, pas de la date d'acquisition initiale par le donateur. Si votre parent avait acheté le bien il y a 30 ans et vous l'a donné il y a 2 ans, votre durée de détention est de 2 ans et vous n'avez aucun abattement. Exception notable : en donation avec réserve d'usufruit, le délai court depuis la date de la donation initiale de la nue-propriété.",
       },
     },
     {
       "@type": "Question",
-      name: "La durée de détention court-elle depuis la donation ou depuis l'achat initial du donateur ?",
+      name: "Quelle différence entre la valeur déclarée basse et une valeur juste ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La durée de détention court depuis la date de la donation ou du décès, et non depuis la date d'acquisition initiale par le donateur ou le défunt. Pour une donation, c'est la date de l'acte notarié. Pour une succession, c'est la date du décès. Exception notable : pour une donation avec réserve d'usufruit, la durée court depuis la date de la donation initiale (pas la date de réunion de l'usufruit au décès du donateur).",
+        text: "Une valeur déclarée basse réduit les droits de mutation au moment de la succession ou donation, mais augmente la plus-value imposable lors de la revente. Inversement, une valeur fidèle au marché augmente les droits mais réduit la PV. Dans la plupart des cas, le gain sur la PV est supérieur au surcoût en droits de mutation, car la PV est taxée à 36,2% tandis que les droits bénéficient d'abattements spécifiques (100 000€ par enfant en ligne directe). Le fisc peut contester une valeur sous-évaluée.",
       },
     },
     {
       "@type": "Question",
-      name: "Les droits de succession sont-ils déductibles de la plus-value ?",
+      name: "Un bien hérité en indivision : comment calculer la PV ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Oui, les droits de succession effectivement payés par le vendeur (l'héritier) sont déductibles et viennent augmenter le prix d'acquisition corrigé, réduisant ainsi la plus-value imposable. Attention : seuls les droits effectivement supportés par l'héritier vendeur sont déductibles. Si le défunt avait souscrit une assurance couvrant les droits de succession, ou si les droits ont été payés par un tiers, ils ne sont pas déductibles.",
+        text: "En cas de succession avec plusieurs héritiers, le bien est en indivision. Chaque héritier est imposé sur sa quote-part de plus-value. Le seuil de surtaxe (50 000€ de PV nette) s'apprécie par héritier, pas sur la totalité. Si la PV totale est de 80 000€ et que vous êtes 2 héritiers à 50%, votre quote-part est de 40 000€ — en dessous du seuil de surtaxe.",
       },
     },
     {
       "@type": "Question",
-      name: "Que se passe-t-il si la valeur déclarée dans l'acte était sous-évaluée ?",
+      name: "La résidence principale du défunt est-elle exonérée de plus-value ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Si le bien a été déclaré à une valeur inférieure à sa valeur de marché dans l'acte de donation ou la déclaration de succession (pour réduire les droits de mutation à titre gratuit), la conséquence directe est une plus-value imposable plus élevée lors de la vente. De plus, l'administration fiscale peut remettre en cause la valeur déclarée et la rehausser, ce qui entraîne à la fois un redressement sur les droits de mutation et une modification de la base de calcul de la plus-value. Une évaluation correcte dès l'origine est donc préférable.",
+        text: "Pas automatiquement. L'exonération résidence principale bénéficie au vendeur, pas au défunt. Si le bien était la résidence principale du défunt mais pas la vôtre, l'exonération ne s'applique pas. En revanche, si vous avez occupé le bien comme votre propre résidence principale après la succession et jusqu'au jour de la vente, l'exonération peut s'appliquer. Le bien doit être VOTRE résidence principale au jour de la cession.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Donation-partage ou donation simple : quelles conséquences sur la PV ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Fiscalement, le calcul de la PV est identique dans les deux cas : la valeur d'acquisition est celle déclarée dans l'acte, et la durée de détention court à partir de la date de la donation. La différence est juridique : la donation-partage fige les valeurs, tandis que la donation simple peut être rapportée à la succession. Pour la PV, c'est toujours la valeur figurant dans l'acte de donation qui sert de base de calcul.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Faut-il déclarer la plus-value si le bien est vendu moins cher que la valeur déclarée ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Non. Si le prix de vente est inférieur à la valeur déclarée dans l'acte de succession ou de donation (majorée des frais déductibles), la plus-value est négative — il y a une moins-value. Aucun impôt n'est dû. En revanche, cette moins-value n'est pas imputable sur d'autres plus-values immobilières ni sur votre revenu global. C'est un cas fréquent quand le bien a été surévalué dans l'acte ou quand le marché a baissé.",
       },
     },
   ],
