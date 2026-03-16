@@ -47,6 +47,9 @@ export interface SimulateurBaseProps {
   customCTA?: React.ReactNode;
   customExamplesSection?: React.ReactNode;
   customAbattementsSection?: React.ReactNode;
+  customSimulateurCards?: React.ReactNode;
+  customFAQSection?: React.ReactNode;
+  customSourcesSection?: React.ReactNode;
   lockedTypeLabel?: string;
   tooltipAmortissements?: string;
 }
@@ -162,6 +165,9 @@ export default function SimulateurBase({
   customCTA,
   customExamplesSection,
   customAbattementsSection,
+  customSimulateurCards,
+  customFAQSection,
+  customSourcesSection,
   lockedTypeLabel,
   tooltipAmortissements,
 }: SimulateurBaseProps) {
@@ -1100,9 +1106,9 @@ export default function SimulateurBase({
         <HowItWorks />
         {customExamplesSection ?? <ExamplesSection />}
         {customAbattementsSection ?? <AbattementsTable />}
-        <SimulateurCards />
-        <FAQSection />
-        <SourcesLegales />
+        {customSimulateurCards ?? <SimulateurCards />}
+        {customFAQSection ?? <FAQSection />}
+        {customSourcesSection ?? <SourcesLegales />}
       </div>
 
     </div>

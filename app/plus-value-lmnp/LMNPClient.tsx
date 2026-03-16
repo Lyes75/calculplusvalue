@@ -699,6 +699,9 @@ export default function LMNPClient() {
         customCTA={<CTAExpertComptable />}
         customExamplesSection={<ExamplesSectionLMNP />}
         customAbattementsSection={<AbattementsTableLMNP />}
+        customSimulateurCards={<></>}
+        customFAQSection={<></>}
+        customSourcesSection={<></>}
         lockedTypeLabel="Location meublée (LMNP)"
         tooltipAmortissements="Indiquez le total de tous les amortissements que vous avez déduits de vos revenus BIC depuis l'acquisition. Ce chiffre se trouve sur vos liasses fiscales (formulaire 2033-B, colonne « Amortissements déduits au titre de l'exercice », cumulé sur toutes les années). Si vous avez un expert-comptable, demandez-lui le total cumulé des amortissements : bâti + mobilier + travaux amortis."
       />
