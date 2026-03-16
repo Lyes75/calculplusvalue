@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -22,6 +23,119 @@ const C = {
   red: "#C0392B",
   redBg: "#FDF0EE",
 };
+
+// ── FAQ spécifique SCI ────────────────────────────────────────────────────────
+const FAQ_ITEMS_SCI = [
+  {
+    q: "Comment est calculée la plus-value d\u2019une SCI à l\u2019IR ?",
+    a: "En SCI soumise à l\u2019IR (transparence fiscale), chaque associé est imposé personnellement sur sa quote-part de plus-value, selon le régime des plus-values des particuliers. Le calcul est identique à celui d\u2019un particulier : prix de vente \u2212 prix d\u2019achat corrigé, puis abattements pour durée de détention (exonération IR après 22 ans, PS après 30 ans). La seule différence est que tous les montants sont proratisés selon votre pourcentage de parts dans la SCI.",
+  },
+  {
+    q: "La plus-value d\u2019une SCI à l\u2019IS bénéficie-t-elle d\u2019abattements pour durée de détention ?",
+    a: "Non. C\u2019est la différence fondamentale entre l\u2019IR et l\u2019IS. En SCI à l\u2019IS, la plus-value est une plus-value professionnelle calculée sur la valeur nette comptable (prix d\u2019achat \u2212 amortissements cumulés). Il n\u2019y a aucun abattement pour durée de détention. Même après 30 ans, la totalité de la plus-value est imposée au taux de l\u2019IS (15% jusqu\u2019à 42 500\u00a0\u20ac de bénéfice, 25% au-delà). En revanche, il n\u2019y a pas de prélèvements sociaux au niveau de la société.",
+  },
+  {
+    q: "La surtaxe sur les plus-values élevées s\u2019applique-t-elle par associé ou sur la SCI entière ?",
+    a: "En SCI à l\u2019IR, la surtaxe (2% à 6% au-delà de 50 000\u00a0\u20ac de PV nette) s\u2019apprécie par associé, sur sa quote-part de plus-value. Concrètement, si la SCI réalise une plus-value de 80 000\u00a0\u20ac et que vous détenez 50% des parts, votre quote-part est de 40 000\u00a0\u20ac \u2014 en dessous du seuil de 50 000\u00a0\u20ac. Vous échappez à la surtaxe alors qu\u2019un propriétaire unique l\u2019aurait payée. En SCI à l\u2019IS, la surtaxe ne s\u2019applique pas (c\u2019est un impôt sur les sociétés, pas sur les particuliers).",
+  },
+  {
+    q: "Vaut-il mieux être à l\u2019IR ou à l\u2019IS pour la plus-value ?",
+    a: "Ça dépend de la durée de détention et du montant des amortissements. À l\u2019IR, les abattements réduisent l\u2019impôt avec le temps et l\u2019exonération est totale après 22-30 ans. À l\u2019IS, pas d\u2019abattement mais un taux potentiellement plus bas (15% vs 36,2%) et pas de PS. Sur une détention courte (< 10 ans) avec peu d\u2019amortissements, l\u2019IS peut être avantageux. Sur une détention longue (> 15 ans), l\u2019IR est presque toujours préférable. Utilisez notre simulateur pour comparer les deux régimes sur votre cas précis.",
+  },
+  {
+    q: "Que se passe-t-il si on passe de l\u2019IR à l\u2019IS ?",
+    a: "Le passage de l\u2019IR à l\u2019IS est irrévocable et déclenche des conséquences fiscales immédiates. Les biens détenus par la SCI sont réputés apportés à une société à l\u2019IS, ce qui génère une imposition de la plus-value latente comme si les biens étaient vendus. De plus, les amortissements commencent à courir depuis la date du passage (sur la valeur vénale à cette date), réduisant la valeur nette comptable pour le futur calcul de PV à l\u2019IS. C\u2019est une décision structurante à ne prendre qu\u2019après avis d\u2019un expert-comptable.",
+  },
+  {
+    q: "Les associés d\u2019une SCI à l\u2019IR peuvent-ils avoir des durées de détention différentes ?",
+    a: "Oui, si les parts ont été acquises à des dates différentes. Chaque associé calcule sa durée de détention à partir de la date d\u2019acquisition de ses propres parts (achat, donation, succession). Si un associé a acquis ses parts il y a 25 ans et un autre il y a 5 ans, leurs abattements seront très différents. Le premier sera exonéré d\u2019IR, le second n\u2019aura aucun abattement. Notre simulateur calcule la plus-value pour votre quote-part et votre durée de détention.",
+  },
+  {
+    q: "Comment sont imposés les associés lors de la distribution du prix de vente en SCI IS ?",
+    a: "En SCI à l\u2019IS, l\u2019impôt sur la plus-value est payé par la société (IS 15%/25%). Mais quand les associés se distribuent le produit de la vente sous forme de dividendes, une seconde imposition s\u2019applique au niveau personnel : flat tax à 30% (12,8% IR + 17,2% PS) ou option pour le barème progressif avec abattement de 40%. C\u2019est la double imposition qui rend le régime IS souvent moins avantageux qu\u2019il n\u2019y paraît à première vue. Le coût fiscal total (IS + imposition des dividendes) peut dépasser le coût en SCI IR sur une détention longue.",
+  },
+];
+
+function FAQSectionSCI() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 40px" }}>
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: "#2D2B55", marginBottom: 20, marginTop: 0 }}>
+        Questions fréquentes — Plus-value en SCI
+      </h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {FAQ_ITEMS_SCI.map((item, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div key={i} style={{ border: "1px solid #E0DEF0", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+              <button
+                onClick={() => setOpenIdx(isOpen ? null : i)}
+                style={{
+                  width: "100%", padding: "16px 20px", background: "none", border: "none", cursor: "pointer",
+                  display: "flex", justifyContent: "space-between", alignItems: "center", textAlign: "left",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#2D2B55", lineHeight: 1.4, paddingRight: 16 }}>{item.q}</span>
+                <span style={{ fontSize: 22, color: "#56CBAD", fontWeight: 300, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(45deg)" : "none" }}>+</span>
+              </button>
+              <div style={{ maxHeight: isOpen ? 500 : 0, overflow: "hidden", transition: "max-height 0.3s ease" }}>
+                <div style={{ padding: "0 20px 16px", fontSize: 14, color: "#6E6B8A", lineHeight: 1.7 }}>
+                  {item.a}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Sources légales spécifiques SCI ──────────────────────────────────────────
+function SourcesLegalesSCI() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 40px" }}>
+      <div style={{ background: "#EEEDF5", borderRadius: 12, padding: 20 }}>
+        <div style={{ fontSize: 12, color: "#6E6B8A", lineHeight: 1.8 }}>
+          <strong style={{ color: "#3F3D6E" }}>Sources légales :</strong>{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 150 U à 150 VH du CGI</span> (plus-values des particuliers, applicable en SCI IR) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 39 duodecies et suivants du CGI</span> (plus-values professionnelles, applicable en SCI IS) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 206 du CGI</span> (imposition des sociétés) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 219 du CGI</span> (taux IS 15%/25%) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 200 A du CGI</span> (flat tax 30% sur dividendes).
+          <br />
+          <strong style={{ color: "#3F3D6E" }}>Dernière mise à jour des barèmes :</strong> 1er janvier 2026.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Autres simulateurs (maillage interne) ────────────────────────────────────
+function AutresSimulateursSCI() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 48px" }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: C.indigo, marginBottom: 16 }}>🔗 Simulateurs spécialisés sur calculplusvalue.fr</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+        {[
+          { href: "/", icon: "🏠", title: "Simulateur général", desc: "Résidence secondaire, locatif, terrain" },
+          { href: "/plus-value-lmnp", icon: "🛋️", title: "Plus-value LMNP", desc: "Réintégration amortissements 2025" },
+          { href: "/plus-value-non-resident", icon: "🌍", title: "Non-résidents", desc: "Taux PS réduit, exonération 150K€" },
+          { href: "/plus-value-indivision", icon: "👥", title: "Indivision", desc: "Quote-part et démembrement" },
+        ].map((link, i) => (
+          <Link key={i} href={link.href} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "#FFFFFF", border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", textDecoration: "none" }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>{link.icon}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.indigo }}>{link.title}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{link.desc}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Contenu éditorial ─────────────────────────────────────────────────────────
 function ContentSCI() {
@@ -228,8 +342,16 @@ export default function SCIClient() {
           { icon: "📄", label: "Export PDF" },
         ]}
         caseBadge={{ label: "SCI — choisissez IR ou IS", color: "#2D2B55" }}
+        customFAQSection={<></>}
+        customSourcesSection={<></>}
+        customSimulateurCards={<></>}
       />
       <ContentSCI />
+      <div style={{ background: "#F4F3FA" }}>
+        <FAQSectionSCI />
+        <SourcesLegalesSCI />
+      </div>
+      <AutresSimulateursSCI />
     </>
   );
 }
