@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { computePlusValue, fmt, getAbatIR, getAbatPS } from "@/lib/calcul-engine";
 
 const SimulateurBase = dynamic(() => import("@/components/SimulateurBase"), { ssr: false });
 
@@ -23,6 +24,314 @@ const C = {
   red: "#C0392B",
   redBg: "#FDF0EE",
 };
+
+// ── Exemples chiffrés SCI ─────────────────────────────────────────────────────
+
+function scrollToSimulator() {
+  const el = document.querySelector("[data-simulator-form]");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function ExamplesSectionSCI() {
+  // ── Exemple 1 : SCI IR, 2 associés 50/50, 15 ans ──
+  const rEx1 = useMemo(() => {
+    return computePlusValue(
+      125000,   // prix achat quote-part 50%
+      190000,   // prix vente quote-part 50%
+      new Date(2011, 0, 1),
+      new Date(2026, 0, 1),
+      9375,     // forfait 7.5% sur 125K
+      18750,    // forfait 15% sur 125K (> 5 ans)
+      2000,     // frais cession quote-part
+      { situationVendeur: "sci-ir", quotePart: 100 } // déjà proratisé
+    );
+  }, []);
+
+  // ── Exemple 2 : SCI IS avec amortissements ──
+  const rEx2 = useMemo(() => {
+    return computePlusValue(
+      400000,
+      520000,
+      new Date(2014, 0, 1),
+      new Date(2026, 0, 1),
+      0,
+      0,
+      5000,
+      { situationVendeur: "sci-is", amortissementsSCI_IS: 120000, beneficeAvantPV: 0 }
+    );
+  }, []);
+
+  // ── Exemple 3 : Comparaison IR vs IS, 20 ans ──
+  const rEx3IR = useMemo(() => {
+    return computePlusValue(
+      300000,
+      450000,
+      new Date(2006, 0, 1),
+      new Date(2026, 0, 1),
+      22500,   // forfait 7.5%
+      45000,   // forfait 15%
+      0,
+      { situationVendeur: "sci-ir", quotePart: 100 }
+    );
+  }, []);
+
+  const rEx3IS = useMemo(() => {
+    return computePlusValue(
+      300000,
+      450000,
+      new Date(2006, 0, 1),
+      new Date(2026, 0, 1),
+      0,
+      0,
+      0,
+      { situationVendeur: "sci-is", amortissementsSCI_IS: 150000, beneficeAvantPV: 0 }
+    );
+  }, []);
+
+  // ── Distribution flat tax pour SCI IS ──
+  const ex2PV = rEx2 ? rEx2.pvBrute : 235000;
+  const ex2IS = rEx2 ? rEx2.totalImpot : 54500;
+  const ex2Distribuable = ex2PV - ex2IS;
+  const ex2FlatTax = Math.round(ex2Distribuable * 0.30);
+  const ex2TotalFiscal = ex2IS + ex2FlatTax;
+  const ex2TauxEffTotal = ex2PV > 0 ? (ex2TotalFiscal / ex2PV * 100) : 0;
+
+  const ex3ISPV = rEx3IS ? rEx3IS.pvBrute : 300000;
+  const ex3ISIS = rEx3IS ? rEx3IS.totalImpot : 70750;
+  const ex3ISDistribuable = ex3ISPV - ex3ISIS;
+  const ex3ISFlatTax = Math.round(ex3ISDistribuable * 0.30);
+  const ex3ISTotalFiscal = ex3ISIS + ex3ISFlatTax;
+  const ex3IRTotal = rEx3IR ? rEx3IR.totalImpot : 12250;
+  const differenceIRvsIS = ex3ISTotalFiscal - ex3IRTotal;
+
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px", marginTop: 48 }}>
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.indigo, marginBottom: 8, marginTop: 0 }}>
+        Exemples de calcul de plus-value en SCI — IR vs IS
+      </h2>
+      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: "0 0 24px 0", maxWidth: 720 }}>
+        Trois situations courantes pour comprendre l&rsquo;impact du régime fiscal (IR ou IS), des quote-parts entre associés, et de la durée de détention sur l&rsquo;impôt.
+      </p>
+
+      <div className="examples-sci-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {/* ── Exemple 1 : SCI IR 50/50 ── */}
+        <div style={{ background: "#FFFFFF", border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#EEEDF5", padding: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.indigo, marginBottom: 4 }}>SCI à l&rsquo;IR — 2 associés, détention 15 ans</div>
+            <div style={{ fontSize: 13, color: C.muted }}>Appartement acheté 250 000€ en 2011 via une SCI à l&rsquo;IR (2 associés à 50%), vendu 380 000€ en 2026.</div>
+          </div>
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
+            {rEx1 && (
+              <>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <tbody>
+                    {[
+                      ["Prix d'achat (QP 50%)", fmt(125000)],
+                      ["+ Frais acquisition 7,5%", fmt(9375)],
+                      ["+ Travaux forfait 15%", fmt(18750)],
+                      ["Frais de cession (QP)", fmt(2000)],
+                      [null],
+                      ["PV brute", fmt(rEx1.pvBrute)],
+                      ["Abattement IR (15 ans)", `${rEx1.abatIRPct.toFixed(0)}%`],
+                      ["Abattement PS (15 ans)", `${rEx1.abatPSPct.toFixed(1)}%`],
+                      [null],
+                      ["IR (19%)", fmt(rEx1.impotIR)],
+                      ["PS (17,2%)", fmt(rEx1.impotPS)],
+                      ...(rEx1.surtaxe > 0 ? [["Surtaxe", fmt(rEx1.surtaxe)]] : []),
+                    ].map((row, j) =>
+                      row[0] === null ? (
+                        <tr key={j}><td colSpan={2} style={{ height: 6 }}></td></tr>
+                      ) : (
+                        <tr key={j} style={{ borderBottom: "1px solid #EEEDF5" }}>
+                          <td style={{ padding: "5px 0", color: C.muted }}>{row[0]}</td>
+                          <td style={{ padding: "5px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>{row[1]}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 2 }}>Impôt total</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#E05656" }}>{fmt(rEx1.totalImpot)}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 2 }}>Net vendeur (QP)</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#3BAF7A" }}>{fmt(rEx1.netVendeur)}</div>
+                  </div>
+                </div>
+              </>
+            )}
+            <div style={{ marginTop: 12, fontSize: 13, color: C.menthe, fontStyle: "italic", lineHeight: 1.5 }}>
+              💡 Grâce à la détention de 15 ans, l&rsquo;abattement IR atteint 60%. En SCI IR, le seuil de surtaxe (50 000€) s&rsquo;apprécie par associé — ici chaque associé est en dessous. Un propriétaire unique aurait payé la surtaxe sur la PV totale.
+            </div>
+            <button onClick={scrollToSimulator} style={{ marginTop: "auto", width: "100%", padding: "10px 16px", background: "none", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, color: C.menthe, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Simulez votre propre situation ↑
+            </button>
+          </div>
+        </div>
+
+        {/* ── Exemple 2 : SCI IS ── */}
+        <div style={{ background: "#FFFFFF", border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#EEEDF5", padding: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.indigo, marginBottom: 4 }}>SCI à l&rsquo;IS — Impact des amortissements</div>
+            <div style={{ fontSize: 13, color: C.muted }}>Immeuble acheté 400 000€ en 2014 via une SCI à l&rsquo;IS, vendu 520 000€ en 2026. Amortissements cumulés : 120 000€.</div>
+          </div>
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <tbody>
+                {[
+                  ["Prix d'achat", fmt(400000)],
+                  ["− Amortissements cumulés", `− ${fmt(120000)}`],
+                  ["= VNC", fmt(280000)],
+                  [null],
+                  ["Prix de vente corrigé", fmt(515000)],
+                  ["− VNC", `− ${fmt(280000)}`],
+                  ["= PV professionnelle", fmt(ex2PV)],
+                  [null],
+                  ["IS 15% (≤ 42 500€)", fmt(6375)],
+                  ["IS 25% (au-delà)", fmt(Math.round(ex2IS - 6375))],
+                  ["= IS total", fmt(ex2IS)],
+                  [null],
+                  ["Distribuable après IS", fmt(ex2Distribuable)],
+                  ["Flat tax 30%", fmt(ex2FlatTax)],
+                  ["= Total fiscal (IS+FT)", fmt(ex2TotalFiscal)],
+                ].map((row, j) =>
+                  row[0] === null ? (
+                    <tr key={j}><td colSpan={2} style={{ height: 6 }}></td></tr>
+                  ) : (
+                    <tr key={j} style={{ borderBottom: "1px solid #EEEDF5" }}>
+                      <td style={{ padding: "5px 0", color: C.muted, ...(String(row[0]).startsWith("=") ? { fontWeight: 700, color: C.indigo } : {}) }}>{row[0]}</td>
+                      <td style={{ padding: "5px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500, ...(String(row[0]).startsWith("=") ? { fontWeight: 700 } : {}) }}>{row[1]}</td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 2 }}>Taux effectif total</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#E05656" }}>{ex2TauxEffTotal.toFixed(1)}%</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 2 }}>Impôt total</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#E05656" }}>{fmt(ex2TotalFiscal)}</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 13, color: C.menthe, fontStyle: "italic", lineHeight: 1.5 }}>
+              💡 En SCI IS, l&rsquo;absence d&rsquo;abattements et le calcul sur la VNC (réduite par 120K€ d&rsquo;amortissements) gonflent la PV. Avec la flat tax à la distribution, le taux effectif atteint {ex2TauxEffTotal.toFixed(0)}%. En SCI IR avec 12 ans de détention, l&rsquo;impôt aurait été nettement inférieur.
+            </div>
+            <button onClick={scrollToSimulator} style={{ marginTop: "auto", width: "100%", padding: "10px 16px", background: "none", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, color: C.menthe, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Simulez votre propre situation ↑
+            </button>
+          </div>
+        </div>
+
+        {/* ── Exemple 3 : Comparaison IR vs IS ── */}
+        <div style={{ background: "#FFFFFF", border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#EEEDF5", padding: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.indigo, marginBottom: 4 }}>Le même bien en SCI IR vs SCI IS</div>
+            <div style={{ fontSize: 13, color: C.muted }}>Appartement acheté 300 000€ il y a 20 ans, vendu 450 000€. Comparaison du coût fiscal total.</div>
+          </div>
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
+            {/* Deux colonnes IR vs IS */}
+            <div className="sci-compare-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {/* Colonne IR */}
+              <div style={{ background: "rgba(86,203,173,0.05)", border: `1px solid rgba(86,203,173,0.2)`, borderRadius: 10, padding: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#2D8C5F", marginBottom: 10, textAlign: "center" }}>⚖️ SCI à l&rsquo;IR</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <tbody>
+                    {rEx3IR && [
+                      ["Prix d'achat corrigé", fmt(rEx3IR.prixAchatCorrige)],
+                      ["PV brute", fmt(rEx3IR.pvBrute)],
+                      [`Abat. IR (${rEx3IR.abatIRPct.toFixed(0)}%)`, `−${fmt(rEx3IR.pvBrute * rEx3IR.abatIRPct / 100)}`],
+                      [`Abat. PS (${rEx3IR.abatPSPct.toFixed(1)}%)`, `−${fmt(rEx3IR.pvBrute * rEx3IR.abatPSPct / 100)}`],
+                      [null],
+                      ["IR (19%)", fmt(rEx3IR.impotIR)],
+                      ["PS (17,2%)", fmt(rEx3IR.impotPS)],
+                      ...(rEx3IR.surtaxe > 0 ? [["Surtaxe", fmt(rEx3IR.surtaxe)]] : []),
+                    ].map((row, j) =>
+                      row === null || row[0] === null ? (
+                        <tr key={j}><td colSpan={2} style={{ height: 4 }}></td></tr>
+                      ) : (
+                        <tr key={j} style={{ borderBottom: "1px solid rgba(86,203,173,0.15)" }}>
+                          <td style={{ padding: "4px 0", color: C.muted, fontSize: 11 }}>{row[0]}</td>
+                          <td style={{ padding: "4px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500, fontSize: 11 }}>{row[1]}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: 10, textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: C.muted }}>Total impôt</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#2D8C5F" }}>{fmt(ex3IRTotal)}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Net vendeur</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#2D8C5F" }}>{fmt(450000 - ex3IRTotal)}</div>
+                </div>
+              </div>
+
+              {/* Colonne IS */}
+              <div style={{ background: "rgba(224,86,86,0.04)", border: `1px solid rgba(224,86,86,0.2)`, borderRadius: 10, padding: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#C0392B", marginBottom: 10, textAlign: "center" }}>🏢 SCI à l&rsquo;IS</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <tbody>
+                    {[
+                      ["VNC (300K−150K amort.)", fmt(150000)],
+                      ["PV imposable", fmt(ex3ISPV)],
+                      ["Aucun abattement", "—"],
+                      [null],
+                      ["IS (15%/25%)", fmt(ex3ISIS)],
+                      ["Flat tax 30% distrib.", fmt(ex3ISFlatTax)],
+                    ].map((row, j) =>
+                      row[0] === null ? (
+                        <tr key={j}><td colSpan={2} style={{ height: 4 }}></td></tr>
+                      ) : (
+                        <tr key={j} style={{ borderBottom: "1px solid rgba(224,86,86,0.12)" }}>
+                          <td style={{ padding: "4px 0", color: C.muted, fontSize: 11 }}>{row[0]}</td>
+                          <td style={{ padding: "4px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500, fontSize: 11 }}>{row[1]}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: 10, textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: C.muted }}>Total fiscal (IS+FT)</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#E05656" }}>{fmt(ex3ISTotalFiscal)}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Net vendeur</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#E05656" }}>{fmt(450000 - ex3ISTotalFiscal)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ligne différence */}
+            <div style={{ background: "rgba(224,86,86,0.06)", border: "1px solid rgba(224,86,86,0.2)", borderRadius: 8, padding: "10px 14px", textAlign: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#E05656" }}>
+                Différence : −{fmt(differenceIRvsIS)} avec l&rsquo;IR
+              </span>
+              <span style={{ fontSize: 12, color: C.muted, display: "block", marginTop: 2 }}>
+                La SCI IR fait économiser ~{fmt(differenceIRvsIS)} d&rsquo;impôt à la revente après 20 ans
+              </span>
+            </div>
+
+            <div style={{ fontSize: 13, color: C.menthe, fontStyle: "italic", lineHeight: 1.5, marginBottom: 12 }}>
+              💡 Sur 20 ans de détention, la SCI IR est massivement gagnante à la revente grâce aux abattements (90% d&rsquo;IR). L&rsquo;IS a pu être avantageux pendant 20 ans sur l&rsquo;imposition des loyers, mais le surcoût à la revente est considérable. Le choix IR vs IS dépend du bilan global loyers + revente.
+            </div>
+            <button onClick={scrollToSimulator} style={{ marginTop: "auto", width: "100%", padding: "10px 16px", background: "none", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, color: C.menthe, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              Simulez votre propre situation ↑
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .examples-sci-grid { grid-template-columns: 1fr !important; }
+          .sci-compare-cols { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 // ── FAQ spécifique SCI ────────────────────────────────────────────────────────
 const FAQ_ITEMS_SCI = [
@@ -342,10 +651,12 @@ export default function SCIClient() {
           { icon: "📄", label: "Export PDF" },
         ]}
         caseBadge={{ label: "SCI — choisissez IR ou IS", color: "#2D2B55" }}
+        customExamplesSection={<></>}
         customFAQSection={<></>}
         customSourcesSection={<></>}
         customSimulateurCards={<></>}
       />
+      <ExamplesSectionSCI />
       <ContentSCI />
       <div style={{ background: "#F4F3FA" }}>
         <FAQSectionSCI />
