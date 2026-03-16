@@ -46,6 +46,7 @@ export interface SimulateurBaseProps {
   customSocialProof?: React.ReactNode;
   customCTA?: React.ReactNode;
   customExamplesSection?: React.ReactNode;
+  customAbattementsSection?: React.ReactNode;
   lockedTypeLabel?: string;
   tooltipAmortissements?: string;
 }
@@ -160,6 +161,7 @@ export default function SimulateurBase({
   customSocialProof,
   customCTA,
   customExamplesSection,
+  customAbattementsSection,
   lockedTypeLabel,
   tooltipAmortissements,
 }: SimulateurBaseProps) {
@@ -1097,7 +1099,7 @@ export default function SimulateurBase({
       <div style={{ background: C.card, borderTop: `1px solid ${C.border}`, paddingTop: 20, paddingBottom: 60 }}>
         <HowItWorks />
         {customExamplesSection ?? <ExamplesSection />}
-        <AbattementsTable />
+        {customAbattementsSection ?? <AbattementsTable />}
         <SimulateurCards />
         <FAQSection />
         <SourcesLegales />
