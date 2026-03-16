@@ -13,7 +13,7 @@ export default function SocialProof() {
         }}
       >
         {[
-          { emoji: "📊", before: "+", bold: "15 000", after: " simulations réalisées" },
+          { emoji: "📊", before: "+", bold: "3 000", after: " simulations réalisées" },
           { emoji: "✅", before: "Barèmes CGI ", bold: "2026 vérifiés", after: "" },
           { emoji: "🔒", before: "Gratuit, ", bold: "sans inscription", after: "" },
         ].map((item, i) => (
