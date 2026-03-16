@@ -1,7 +1,157 @@
 "use client";
+import { useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { C } from "@/lib/constants";
 
 const SimulateurBase = dynamic(() => import("@/components/SimulateurBase"), { ssr: false });
+
+// ── Bloc alerte réforme 2025 ────────────────────────────────────────────────
+function LMNPAlertBanner() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto 12px", padding: "0 16px" }}>
+      <div style={{ background: "rgba(224,86,86,0.06)", border: "1px solid rgba(224,86,86,0.2)", borderRadius: 10, padding: "12px 20px", fontSize: 14, color: "#1E1C3A", lineHeight: 1.6 }}>
+        ⚠️ <strong>Réforme 2025 en vigueur</strong> — Les amortissements déduits sont désormais réintégrés dans le calcul de la plus-value LMNP. Ce simulateur prend en compte cette réforme.
+      </div>
+    </div>
+  );
+}
+
+// ── Social proof LMNP ───────────────────────────────────────────────────────
+function LMNPSocialProof() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto 20px", padding: "0 16px" }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+        {[
+          { emoji: "📊", before: "Simulateur mis à jour avec la ", bold: "réforme LF 2025", after: "" },
+          { emoji: "✅", before: "Barèmes CGI au ", bold: "1er janvier 2026", after: "" },
+          { emoji: "🔒", before: "Gratuit, ", bold: "sans inscription", after: "" },
+        ].map((item, i) => (
+          <div key={i} style={{ fontSize: 13, color: C.textMuted, display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 14 }}>{item.emoji}</span>
+            <span>
+              {item.before}
+              <strong style={{ fontWeight: 600, color: C.text }}>{item.bold}</strong>
+              {item.after}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── CTA Expert-comptable LMNP ───────────────────────────────────────────────
+function CTAExpertComptable() {
+  return (
+    <a href="/contact" style={{ textDecoration: "none", display: "block" }}>
+      {/* TODO: remplacer href par lien partenaire (Indy, Declonou, etc.) */}
+      <div style={{
+        background: "#EEEDF5", border: "1px solid #D8D6E8", borderLeft: "3px solid #56CBAD",
+        borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
+        cursor: "pointer", transition: "transform 0.15s",
+      }}
+        onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
+        onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
+      >
+        <div style={{ fontSize: 28, flexShrink: 0 }}>🧮</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#2D2B55", marginBottom: 2 }}>Besoin d&rsquo;un expert-comptable LMNP ?</div>
+          <div style={{ fontSize: 12, color: "#6E6B8A", lineHeight: 1.4 }}>
+            La comptabilité en LMNP au réel est complexe (amortissements, liasses fiscales, déclarations BIC). Un expert-comptable spécialisé peut optimiser votre fiscalité et anticiper l&rsquo;impact de la revente.
+          </div>
+        </div>
+        <div style={{ background: "#56CBAD", color: "#1E1C3A", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>
+          Nous contacter →
+        </div>
+      </div>
+    </a>
+  );
+}
+
+// ── FAQ Accordéon LMNP ──────────────────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "Les amortissements LMNP sont-ils toujours réintégrés dans la plus-value en 2026 ?",
+    a: "Oui. Depuis la loi de finances 2025, les amortissements admis en déduction au titre de l\u2019article 39C du CGI sont réintégrés dans le calcul du prix d\u2019acquisition corrigé lors de la revente. Cela concerne les amortissements du bien immobilier comme du mobilier. Le prix d\u2019achat corrigé est diminué du montant total des amortissements déduits, ce qui augmente mécaniquement la plus-value imposable.",
+  },
+  {
+    q: "Quels amortissements sont concernés par la réintégration ?",
+    a: "Tous les amortissements admis en déduction des revenus BIC au titre du régime réel LMNP. Cela inclut l\u2019amortissement du bâti, du mobilier, des travaux d\u2019amélioration et des frais d\u2019acquisition amortis. Les amortissements correspondant à des travaux de construction, reconstruction ou agrandissement déjà pris en compte dans le prix d\u2019acquisition ne sont pas réintégrés une seconde fois. En micro-BIC, la question ne se pose pas puisqu\u2019aucun amortissement n\u2019est déduit.",
+  },
+  {
+    q: "Comment calculer la plus-value d\u2019un LMNP en 2026 ?",
+    a: "Le calcul suit le régime des plus-values des particuliers, avec une modification : PV brute = Prix de vente corrigé \u2212 (Prix d\u2019achat + frais d\u2019acquisition + travaux \u2212 amortissements déduits). Ensuite, appliquez les abattements pour durée de détention (6% par an en IR de la 6e à la 21e année, exonération à 22 ans). Le taux reste de 19% d\u2019IR + 17,2% de PS. Notre simulateur en haut de page calcule tout automatiquement.",
+  },
+  {
+    q: "Le micro-BIC est-il concerné par la réintégration des amortissements ?",
+    a: "Non. Le régime micro-BIC applique un abattement forfaitaire de 50% sur les recettes sans amortissement comptable. Il n\u2019y a donc rien à réintégrer. La réforme ne concerne que les LMNP au régime réel qui ont effectivement déduit des amortissements.",
+  },
+  {
+    q: "Peut-on encore éviter l\u2019impôt sur la plus-value en LMNP ?",
+    a: "Oui, plusieurs voies restent ouvertes. L\u2019exonération par durée de détention reste applicable : exonération totale d\u2019IR après 22 ans et de PS après 30 ans, y compris sur la fraction liée aux amortissements réintégrés. Le passage en LMP peut aussi permettre une exonération totale si les conditions sont réunies (activité > 5 ans, recettes < 90 000 \u20ac). Enfin, la vente de la résidence principale reste toujours exonérée si le bien est requalifié en RP avant la vente.",
+  },
+  {
+    q: "Quelle différence entre LMNP et LMP pour la plus-value ?",
+    a: "En LMNP, la plus-value suit le régime des particuliers avec abattements pour durée de détention et réintégration des amortissements depuis 2025. En LMP, la plus-value relève du régime des plus-values professionnelles, avec une exonération totale possible après 5 ans d\u2019activité si les recettes sont inférieures à 90 000 \u20ac (art. 151 septies CGI). Le statut LMP s\u2019applique automatiquement si vos recettes dépassent 23 000 \u20ac/an ET vos autres revenus professionnels.",
+  },
+];
+
+function FAQSectionLMNP() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 40px" }}>
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: "#2D2B55", marginBottom: 20, marginTop: 0 }}>
+        Questions fréquentes — Plus-value LMNP
+      </h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {FAQ_ITEMS.map((item, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div key={i} style={{ border: "1px solid #E0DEF0", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+              <button
+                onClick={() => setOpenIdx(isOpen ? null : i)}
+                style={{
+                  width: "100%", padding: "16px 20px", background: "none", border: "none", cursor: "pointer",
+                  display: "flex", justifyContent: "space-between", alignItems: "center", textAlign: "left",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#2D2B55", lineHeight: 1.4, paddingRight: 16 }}>{item.q}</span>
+                <span style={{ fontSize: 22, color: "#56CBAD", fontWeight: 300, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(45deg)" : "none" }}>+</span>
+              </button>
+              <div style={{ maxHeight: isOpen ? 500 : 0, overflow: "hidden", transition: "max-height 0.3s ease" }}>
+                <div style={{ padding: "0 20px 16px", fontSize: 14, color: "#6E6B8A", lineHeight: 1.7 }}>
+                  {item.a}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Sources légales ─────────────────────────────────────────────────────────
+function SourcesLegalesLMNP() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 40px" }}>
+      <div style={{ background: "#EEEDF5", borderRadius: 12, padding: 20 }}>
+        <div style={{ fontSize: 12, color: "#6E6B8A", lineHeight: 1.8 }}>
+          <strong style={{ color: "#3F3D6E" }}>Sources légales :</strong>{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 150 VB II du CGI</span> (réintégration des amortissements) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 150 VC</span> (abattements durée de détention) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 39C</span> (amortissements admis en déduction) ·{" "}
+          <span style={{ fontFamily: "monospace" }}>art. 151 septies</span> (exonération LMP) ·{" "}
+          Loi n°2025-127 du 14 février 2025 de finances pour 2025.
+          <br />
+          <strong style={{ color: "#3F3D6E" }}>Dernière mise à jour des barèmes :</strong> 1er janvier 2026.
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Contenu éditorial LMNP ───────────────────────────────────────────────────
 function ContentLMNP() {
@@ -19,16 +169,16 @@ function ContentLMNP() {
         <div style={{ background: "#EEEDF5", borderLeft: "4px solid #56CBAD", borderRadius: 8, padding: "16px 20px", marginBottom: 32 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "#2D2B55", marginBottom: 6 }}>📌 Principe de la réforme</div>
           <p style={{ fontSize: 14, color: "#3F3D6E", lineHeight: 1.7, margin: 0 }}>
-            Avant 2025, le LMNP bénéficiait d'un double avantage : amortir le bien pour réduire ses revenus imposables <em>et</em> vendre au régime des plus-values particulières (avec abattements). La réforme met fin à ce double avantage en diminuant le prix d'acquisition corrigé du montant des amortissements déduits, ce qui augmente la plus-value brute imposable.
+            Avant 2025, le LMNP bénéficiait d&rsquo;un double avantage : amortir le bien pour réduire ses revenus imposables <em>et</em> vendre au régime des plus-values particulières (avec abattements). La réforme met fin à ce double avantage en diminuant le prix d&rsquo;acquisition corrigé du montant des amortissements déduits, ce qui augmente la plus-value brute imposable.
           </p>
         </div>
 
         {/* Section 2 — Exemple chiffré */}
         <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: "#2D2B55", marginBottom: 16, marginTop: 0 }}>
-          Exemple concret : l'impact chiffré
+          Exemple concret : l&rsquo;impact chiffré
         </h2>
         <p style={{ fontSize: 14, color: "#6E6B8A", lineHeight: 1.6, marginBottom: 16 }}>
-          Prenons un appartement acheté 200 000 € il y a 10 ans, vendu 300 000 €, avec 15 000 € de frais de notaire (forfait 7,5%) et 40 000 € d'amortissements cumulés déduits sur 10 ans.
+          Prenons un appartement acheté 200 000 € il y a 10 ans, vendu 300 000 €, avec 15 000 € de frais de notaire (forfait 7,5%) et 40 000 € d&rsquo;amortissements cumulés déduits sur 10 ans.
         </p>
         <div style={{ overflowX: "auto", marginBottom: 32 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 480 }}>
@@ -60,35 +210,19 @@ function ContentLMNP() {
           </table>
         </div>
         <div style={{ background: "#FDF3E8", border: "1px solid #D4923A", borderRadius: 10, padding: "14px 18px", marginBottom: 32, fontSize: 13, color: "#7A4F1A", lineHeight: 1.6 }}>
-          ⚠️ <strong>Surcoût fiscal dans cet exemple :</strong> +11 625 € d'impôt supplémentaire dû à la réintégration des 40 000 € d'amortissements, soit un impact de 29% de la plus-value additionnelle.
+          ⚠️ <strong>Surcoût fiscal dans cet exemple :</strong> +11 625 € d&rsquo;impôt supplémentaire dû à la réintégration des 40 000 € d&rsquo;amortissements, soit un impact de 29% de la plus-value additionnelle.
         </div>
 
         {/* Section 3 — Réduire l'impact */}
         <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: "#2D2B55", marginBottom: 16, marginTop: 0 }}>
-          Comment réduire l'impact de la réforme ?
+          Comment réduire l&rsquo;impact de la réforme ?
         </h2>
         <div style={{ display: "grid", gap: 14, marginBottom: 32 }}>
           {[
-            {
-              icon: "⏳",
-              title: "Attendre l'exonération IR (22 ans)",
-              desc: "Plus la durée de détention est longue, plus les abattements réduisent la plus-value imposable. À 22 ans de détention, vous êtes totalement exonéré d'IR (19%), et à 30 ans, exonéré aussi des prélèvements sociaux (17,2%) — y compris sur la partie liée aux amortissements réintégrés.",
-            },
-            {
-              icon: "🔧",
-              title: "Maximiser les charges déductibles à la vente",
-              desc: "Les frais d'agence à votre charge, les diagnostics obligatoires, la mainlevée d'hypothèque et les travaux de remise en état réalisés par des entreprises réduisent le prix de vente corrigé ou augmentent le prix d'acquisition corrigé, diminuant ainsi la plus-value brute.",
-            },
-            {
-              icon: "👥",
-              title: "Vente en indivision pour éviter la surtaxe",
-              desc: "Si votre plus-value nette dépasse 50 000 €, une surtaxe progressive s'applique. En cas de bien détenu en indivision, le seuil de 50 000 € s'apprécie par quote-part. Vendre à deux peut permettre d'éviter cette surtaxe additionnelle.",
-            },
-            {
-              icon: "📋",
-              title: "Vérifier votre statut LMP",
-              desc: "Si vos recettes locatives dépassent 23 000 € par an et sont supérieures à vos autres revenus professionnels, vous êtes LMP (Loueur Meublé Professionnel). Ce régime offre des exonérations totales après 5 ans d'activité si les recettes sont < 90 000 € (art. 151 septies CGI). Consultez un expert-comptable pour évaluer cette option.",
-            },
+            { icon: "⏳", title: "Attendre l\u2019exonération IR (22 ans)", desc: "Plus la durée de détention est longue, plus les abattements réduisent la plus-value imposable. À 22 ans de détention, vous êtes totalement exonéré d\u2019IR (19%), et à 30 ans, exonéré aussi des prélèvements sociaux (17,2%) — y compris sur la partie liée aux amortissements réintégrés." },
+            { icon: "🔧", title: "Maximiser les charges déductibles à la vente", desc: "Les frais d\u2019agence à votre charge, les diagnostics obligatoires, la mainlevée d\u2019hypothèque et les travaux de remise en état réalisés par des entreprises réduisent le prix de vente corrigé ou augmentent le prix d\u2019acquisition corrigé, diminuant ainsi la plus-value brute." },
+            { icon: "👥", title: "Vente en indivision pour éviter la surtaxe", desc: "Si votre plus-value nette dépasse 50 000 €, une surtaxe progressive s\u2019applique. En cas de bien détenu en indivision, le seuil de 50 000 € s\u2019apprécie par quote-part. Vendre à deux peut permettre d\u2019éviter cette surtaxe additionnelle." },
+            { icon: "📋", title: "Vérifier votre statut LMP", desc: "Si vos recettes locatives dépassent 23 000 € par an et sont supérieures à vos autres revenus professionnels, vous êtes LMP (Loueur Meublé Professionnel). Ce régime offre des exonérations totales après 5 ans d\u2019activité si les recettes sont < 90 000 € (art. 151 septies CGI). Consultez un expert-comptable pour évaluer cette option." },
           ].map((item, i) => (
             <div key={i} style={{ background: "#FAFAFE", border: "1px solid #E0DEF0", borderRadius: 12, padding: "16px 18px", display: "flex", gap: 14 }}>
               <span style={{ fontSize: 24, flexShrink: 0, marginTop: 2 }}>{item.icon}</span>
@@ -106,32 +240,8 @@ function ContentLMNP() {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 32 }}>
           {[
-            {
-              label: "LMNP",
-              color: "#3F3D6E",
-              bg: "#EEEDF5",
-              items: [
-                "Recettes < 23 000 € OU < revenus professionnels",
-                "Plus-value : régime des particuliers",
-                "IR 19% + PS 17,2%",
-                "Abattements pour durée de détention",
-                "Réintégration des amortissements depuis 2025",
-                "Surtaxe si PV nette > 50 000 €",
-              ],
-            },
-            {
-              label: "LMP",
-              color: "#2D8C5F",
-              bg: "#E8F7F0",
-              items: [
-                "Recettes > 23 000 € ET > revenus professionnels",
-                "Plus-value : régime des professionnels",
-                "Exonération totale si recettes < 90K€ après 5 ans",
-                "Exonération partielle si recettes 90K€ - 126K€",
-                "Pas de réintégration des amortissements (art. 151 septies)",
-                "Imposition sur les plus-values à court terme = revenus",
-              ],
-            },
+            { label: "LMNP", color: "#3F3D6E", bg: "#EEEDF5", items: ["Recettes < 23 000 € OU < revenus professionnels", "Plus-value : régime des particuliers", "IR 19% + PS 17,2%", "Abattements pour durée de détention", "Réintégration des amortissements depuis 2025", "Surtaxe si PV nette > 50 000 €"] },
+            { label: "LMP", color: "#2D8C5F", bg: "#E8F7F0", items: ["Recettes > 23 000 € ET > revenus professionnels", "Plus-value : régime des professionnels", "Exonération totale si recettes < 90K€ après 5 ans", "Exonération partielle si recettes 90K€ - 126K€", "Pas de réintégration des amortissements (art. 151 septies)", "Imposition sur les plus-values à court terme = revenus"] },
           ].map((col, i) => (
             <div key={i} style={{ background: col.bg, borderRadius: 12, padding: "20px 18px", border: `1px solid ${col.color}20` }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: col.color, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
@@ -144,33 +254,25 @@ function ContentLMNP() {
           ))}
         </div>
 
-        {/* Bloc de liens internes */}
+      </div>
+    </div>
+  );
+}
+
+// ── Bloc de liens internes ──────────────────────────────────────────────────
+function AutresSimulateurs() {
+  return (
+    <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#F4F3FA", padding: "0 24px 60px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ background: "#EEEDF5", borderRadius: 12, padding: "24px 20px", border: "1px solid #D6D4EC" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "#2D2B55", marginBottom: 14 }}>🔗 Autres simulateurs sur calculplusvalue.fr</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
             {[
-              {
-                href: "/",
-                icon: "🏠",
-                title: "Simulateur général",
-                desc: "Résidence secondaire, locatif, terrain",
-              },
-              {
-                href: "/plus-value-sci",
-                icon: "🏢",
-                title: "Plus-value SCI",
-                desc: "SCI à l'IR et SCI à l'IS",
-              },
-              {
-                href: "/exonerations-plus-value",
-                icon: "✅",
-                title: "Exonérations",
-                desc: "Résidence principale, cas spéciaux",
-              },
+              { href: "/", icon: "🏠", title: "Simulateur général", desc: "Résidence secondaire, locatif, terrain" },
+              { href: "/plus-value-sci", icon: "🏢", title: "Plus-value SCI", desc: "SCI à l\u2019IR et SCI à l\u2019IS" },
+              { href: "/exonerations-plus-value", icon: "✅", title: "Exonérations", desc: "Résidence principale, cas spéciaux" },
             ].map((link, i) => (
-              <a
-                key={i}
-                href={link.href}
+              <Link key={i} href={link.href}
                 style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "#FAFAFE", border: "1px solid #E0DEF0", borderRadius: 10, padding: "14px 16px", textDecoration: "none", transition: "box-shadow 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(45,43,85,0.1)")}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}
@@ -180,11 +282,10 @@ function ContentLMNP() {
                   <div style={{ fontWeight: 700, fontSize: 13, color: "#2D2B55" }}>{link.title}</div>
                   <div style={{ fontSize: 12, color: "#6E6B8A", marginTop: 2 }}>{link.desc}</div>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -202,8 +303,25 @@ export default function LMNPClient() {
           label: "Régime LMNP — amortissements réintégrés (réforme 2025)",
           color: "menthe",
         }}
+        customTitle="Calculez votre plus-value LMNP avec la réintégration des amortissements"
+        customSubtitle="Renseignez les informations de votre bien meublé. Le simulateur applique automatiquement la réforme 2025 (réintégration des amortissements), les abattements pour durée de détention et la surtaxe si applicable."
+        customBadges={[
+          { icon: "⚠️", text: "Réforme 2025 prise en compte" },
+          { icon: "📊", text: "Comparaison avant/après réforme" },
+          { icon: "💡", text: "Pistes d\u2019optimisation LMNP" },
+        ]}
+        customAlertBanner={<LMNPAlertBanner />}
+        customSocialProof={<LMNPSocialProof />}
+        customCTA={<CTAExpertComptable />}
+        lockedTypeLabel="Location meublée (LMNP)"
+        tooltipAmortissements="Indiquez le total de tous les amortissements que vous avez déduits de vos revenus BIC depuis l'acquisition. Ce chiffre se trouve sur vos liasses fiscales (formulaire 2033-B, colonne « Amortissements déduits au titre de l'exercice », cumulé sur toutes les années). Si vous avez un expert-comptable, demandez-lui le total cumulé des amortissements : bâti + mobilier + travaux amortis."
       />
       <ContentLMNP />
+      <div style={{ background: "#F4F3FA" }}>
+        <FAQSectionLMNP />
+        <SourcesLegalesLMNP />
+      </div>
+      <AutresSimulateurs />
     </>
   );
 }

@@ -21,49 +21,57 @@ export const metadata: Metadata = {
   robots: "index, follow",
 };
 
-// ── FAQ JSON-LD ──────────────────────────────────────────────────────────────
+// ── FAQ JSON-LD (6 questions — synchronisé avec LMNPClient.tsx) ──────────────
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
     {
       "@type": "Question",
-      name: "Qu'est-ce que la réforme LMNP 2025 sur les amortissements ?",
+      name: "Les amortissements LMNP sont-ils toujours réintégrés dans la plus-value en 2026 ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La loi de finances 2025 (art. 150 VB II du CGI) prévoit que les amortissements admis en déduction des revenus LMNP (sur le bien immobilier, les meubles, les travaux) doivent être réintégrés dans le calcul de la plus-value immobilière. Concrètement, le montant des amortissements déduits est soustrait du prix d'acquisition corrigé, ce qui augmente mécaniquement la plus-value imposable.",
+        text: "Oui. Depuis la loi de finances 2025, les amortissements admis en déduction au titre de l'article 39C du CGI sont réintégrés dans le calcul du prix d'acquisition corrigé lors de la revente. Cela concerne les amortissements du bien immobilier comme du mobilier. Le prix d'achat corrigé est diminué du montant total des amortissements déduits, ce qui augmente mécaniquement la plus-value imposable.",
       },
     },
     {
       "@type": "Question",
-      name: "Comment calculer la plus-value d'un bien LMNP avec la réforme 2025 ?",
+      name: "Quels amortissements sont concernés par la réintégration ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La formule est : Plus-value = Prix de vente corrigé − (Prix d'achat + Frais d'acquisition + Travaux − Amortissements déduits). Les amortissements réintégrés réduisent le prix d'acquisition corrigé, augmentant ainsi la plus-value brute soumise aux abattements pour durée de détention. Notre simulateur effectue ce calcul automatiquement.",
+        text: "Tous les amortissements admis en déduction des revenus BIC au titre du régime réel LMNP. Cela inclut l'amortissement du bâti, du mobilier, des travaux d'amélioration et des frais d'acquisition amortis. Les amortissements correspondant à des travaux de construction, reconstruction ou agrandissement déjà pris en compte dans le prix d'acquisition ne sont pas réintégrés une seconde fois. En micro-BIC, la question ne se pose pas puisqu'aucun amortissement n'est déduit.",
       },
     },
     {
       "@type": "Question",
-      name: "Les abattements pour durée de détention s'appliquent-ils encore en LMNP ?",
+      name: "Comment calculer la plus-value d'un LMNP en 2026 ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Oui, les abattements pour durée de détention restent applicables aux biens LMNP : 6% par an de la 6e à la 21e année pour l'IR (exonération à 22 ans), et 1,65% par an de la 6e à la 21e année + 9% par an de la 23e à la 30e année pour les prélèvements sociaux (exonération à 30 ans). La réforme 2025 ne modifie que la base de calcul de la plus-value brute.",
+        text: "Le calcul suit le régime des plus-values des particuliers, avec une modification : PV brute = Prix de vente corrigé − (Prix d'achat + frais d'acquisition + travaux − amortissements déduits). Ensuite, appliquez les abattements pour durée de détention (6% par an en IR de la 6e à la 21e année, exonération à 22 ans). Le taux reste de 19% d'IR + 17,2% de PS. Notre simulateur en haut de page calcule tout automatiquement.",
       },
     },
     {
       "@type": "Question",
-      name: "Quelle est la différence entre LMNP et LMP pour la plus-value ?",
+      name: "Le micro-BIC est-il concerné par la réintégration des amortissements ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "En LMNP, la plus-value relève du régime des particuliers (art. 150 U CGI) avec les taux de 19% d'IR et 17,2% de PS, et les abattements pour durée de détention. En LMP (recettes > 23 000 € et > autres revenus professionnels), la plus-value relève des plus-values professionnelles : exonération totale après 5 ans d'activité si les recettes sont < 90 000 € (art. 151 septies CGI), sinon imposition au barème progressif.",
+        text: "Non. Le régime micro-BIC applique un abattement forfaitaire de 50% sur les recettes sans amortissement comptable. Il n'y a donc rien à réintégrer. La réforme ne concerne que les LMNP au régime réel qui ont effectivement déduit des amortissements.",
       },
     },
     {
       "@type": "Question",
-      name: "Peut-on éviter la réintégration des amortissements en LMNP ?",
+      name: "Peut-on encore éviter l'impôt sur la plus-value en LMNP ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Il n'est pas possible d'éviter légalement la réintégration des amortissements depuis la loi de finances 2025. Cependant, plusieurs stratégies peuvent limiter l'impact : attendre une durée de détention longue pour bénéficier des abattements, optimiser le prix de vente, ou passer sous le régime LMP si les conditions sont remplies et que la plus-value professionnelle est exonérée. Consultez un conseiller fiscal pour votre situation.",
+        text: "Oui, plusieurs voies restent ouvertes. L'exonération par durée de détention reste applicable : exonération totale d'IR après 22 ans et de PS après 30 ans, y compris sur la fraction liée aux amortissements réintégrés. Le passage en LMP peut aussi permettre une exonération totale si les conditions sont réunies (activité > 5 ans, recettes < 90 000 €). Enfin, la vente de la résidence principale reste toujours exonérée si le bien est requalifié en RP avant la vente.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Quelle différence entre LMNP et LMP pour la plus-value ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "En LMNP, la plus-value suit le régime des particuliers avec abattements pour durée de détention et réintégration des amortissements depuis 2025. En LMP, la plus-value relève du régime des plus-values professionnelles, avec une exonération totale possible après 5 ans d'activité si les recettes sont inférieures à 90 000 € (art. 151 septies CGI). Le statut LMP s'applique automatiquement si vos recettes dépassent 23 000 €/an ET vos autres revenus professionnels.",
       },
     },
   ],

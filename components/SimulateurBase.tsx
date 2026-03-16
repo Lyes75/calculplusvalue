@@ -38,6 +38,15 @@ export interface SimulateurBaseProps {
   disableForfaitFrais?: boolean;
   caseBadge?: { label: string; color: string };
   children?: React.ReactNode;
+  // Props de personnalisation pour les pages spécialisées
+  customTitle?: string;
+  customSubtitle?: string;
+  customBadges?: { icon: string; text: string }[];
+  customAlertBanner?: React.ReactNode;
+  customSocialProof?: React.ReactNode;
+  customCTA?: React.ReactNode;
+  lockedTypeLabel?: string;
+  tooltipAmortissements?: string;
 }
 
 // ── Sous-composant Tooltip ─────────────────────────────────────────────────
@@ -143,6 +152,14 @@ export default function SimulateurBase({
   labelPrixAchat,
   labelFraisAcquisition,
   caseBadge,
+  customTitle,
+  customSubtitle,
+  customBadges,
+  customAlertBanner,
+  customSocialProof,
+  customCTA,
+  lockedTypeLabel,
+  tooltipAmortissements,
 }: SimulateurBaseProps) {
   // ── State ──
   const [prixAchat, setPrixAchat] = useState("");
@@ -365,8 +382,8 @@ export default function SimulateurBase({
 
       {/* ── Bandeau actualité + Social proof ── */}
       <div style={{ paddingTop: 20 }}>
-        <AlertBanner />
-        <SocialProof />
+        {customAlertBanner !== undefined ? customAlertBanner : <AlertBanner />}
+        {customSocialProof !== undefined ? customSocialProof : <SocialProof />}
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
@@ -374,17 +391,17 @@ export default function SimulateurBase({
         {/* ── Intro ── */}
         <div style={{ marginBottom: 24 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 400, color: C.text, margin: "0 0 12px 0" }}>
-            Calculez votre impôt sur la plus-value en 30 secondes
+            {customTitle || "Calculez votre impôt sur la plus-value en 30 secondes"}
           </h2>
           <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.7, margin: 0, maxWidth: 720 }}>
-            Renseignez les informations de votre bien ci-dessous. Le simulateur applique automatiquement les <strong>abattements pour durée de détention</strong>, le forfait travaux, les frais de notaire et la surtaxe si applicable. Le résultat s'affiche en temps réel.
+            {customSubtitle || <>Renseignez les informations de votre bien ci-dessous. Le simulateur applique automatiquement les <strong>abattements pour durée de détention</strong>, le forfait travaux, les frais de notaire et la surtaxe si applicable. Le résultat s'affiche en temps réel.</>}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 16 }}>
-            {[
+            {(customBadges || [
               { icon: "🏠", text: "Résidence secondaire, locatif ou terrain" },
               { icon: "📅", text: "Exonération IR à 22 ans, PS à 30 ans" },
               { icon: "💡", text: "Pistes d'optimisation personnalisées" },
-            ].map((item, i) => (
+            ]).map((item, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.textMuted }}>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
                 <span>{item.text}</span>
@@ -395,6 +412,16 @@ export default function SimulateurBase({
 
         {/* ── Formulaire ── */}
         <div data-simulator-form style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
+          {lockedTypeLabel && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "block" }}>Type de bien</label>
+              <div style={{ background: "#EEEDF5", border: "1px solid #D8D6E8", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontWeight: 600, fontSize: 15, color: "#2D2B55" }}>{lockedTypeLabel}</span>
+                <span style={{ fontSize: 12, color: "#6E6B8A" }}>🔒 pré-configuré</span>
+              </div>
+              <a href="/" style={{ fontSize: 12, color: "#56CBAD", textDecoration: "none", marginTop: 4, display: "inline-block" }}>Autre situation ? → Simulateur général</a>
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             {showTypeResidence && (
               <div>
@@ -509,7 +536,7 @@ export default function SimulateurBase({
                 <div style={{ background: "#EEEDF5", borderLeft: "3px solid #56CBAD", borderRadius: 8, padding: 16 }}>
                   <label style={{ ...labelStyle, color: C.primary, fontWeight: 700 }}>
                     Amortissements cumulés déduits
-                    <Tip text="Depuis la loi de finances 2025, les amortissements admis en déduction (sur le bien, les meubles, les travaux) réduisent le prix d'acquisition corrigé. Cela augmente mécaniquement la plus-value imposable. Indiquez le total des amortissements déduits depuis la mise en location." />
+                    <Tip text={tooltipAmortissements || "Depuis la loi de finances 2025, les amortissements admis en déduction (sur le bien, les meubles, les travaux) réduisent le prix d'acquisition corrigé. Cela augmente mécaniquement la plus-value imposable. Indiquez le total des amortissements déduits depuis la mise en location."} />
                   </label>
                   <input
                     type="number"
@@ -1017,6 +1044,7 @@ export default function SimulateurBase({
                           desc={`${fmt(result.netVendeur)} à placer ? Comparez les SCPI, l'assurance-vie et les placements immobiliers pour faire fructifier votre capital.`}
                           cta="Comparer" color="#3BAF7A" bgColor="rgba(59,175,122,0.06)" borderColor="#3BAF7A" />
                       )}
+                      {customCTA}
                     </div>
                   </div>
                 )}
