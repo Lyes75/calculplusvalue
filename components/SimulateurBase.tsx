@@ -45,6 +45,7 @@ export interface SimulateurBaseProps {
   customAlertBanner?: React.ReactNode;
   customSocialProof?: React.ReactNode;
   customCTA?: React.ReactNode;
+  customExamplesSection?: React.ReactNode;
   lockedTypeLabel?: string;
   tooltipAmortissements?: string;
 }
@@ -158,6 +159,7 @@ export default function SimulateurBase({
   customAlertBanner,
   customSocialProof,
   customCTA,
+  customExamplesSection,
   lockedTypeLabel,
   tooltipAmortissements,
 }: SimulateurBaseProps) {
@@ -1094,7 +1096,7 @@ export default function SimulateurBase({
       {/* ── SEO Content Sections ── */}
       <div style={{ background: C.card, borderTop: `1px solid ${C.border}`, paddingTop: 20, paddingBottom: 60 }}>
         <HowItWorks />
-        <ExamplesSection />
+        {customExamplesSection ?? <ExamplesSection />}
         <AbattementsTable />
         <SimulateurCards />
         <FAQSection />

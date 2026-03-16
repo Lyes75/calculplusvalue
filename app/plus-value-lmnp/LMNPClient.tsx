@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { C } from "@/lib/constants";
+import { computePlusValue, fmt } from "@/lib/calcul-engine";
 
 const SimulateurBase = dynamic(() => import("@/components/SimulateurBase"), { ssr: false });
 
@@ -129,6 +130,183 @@ function FAQSectionLMNP() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// ── Exemples chiffrés LMNP (avec comparaison avant/après réforme) ──────────
+interface LMNPExampleDef {
+  title: string;
+  subtitle: string;
+  prixAchat: number;
+  prixVente: number;
+  dateAchat: Date;
+  fraisAcqui: number;
+  travaux: number;
+  fraisCession: number;
+  amortissements: number;
+  optimMsg: string;
+}
+
+const LMNP_EXAMPLES: LMNPExampleDef[] = [
+  {
+    title: "LMNP classique — détention 10 ans",
+    subtitle: "Studio meublé à Bordeaux acheté 150 000\u202F€ en 2016, vendu 210 000\u202F€ en 2026. Amortissements cumulés : 35 000\u202F€.",
+    prixAchat: 150000,
+    prixVente: 210000,
+    dateAchat: new Date(2016, 0, 1),
+    fraisAcqui: 11250,   // forfait 7,5%
+    travaux: 22500,       // forfait 15%
+    fraisCession: 2000,
+    amortissements: 35000,
+    optimMsg: "Si vous attendez 12 ans de plus, l\u2019IR sera totalement exonéré (22 ans de détention).",
+  },
+  {
+    title: "LMNP forte rentabilité — détention 5 ans",
+    subtitle: "T2 meublé à Lyon acheté 200 000\u202F€ en 2021, vendu 240 000\u202F€ en 2026. Amortissements cumulés : 55 000\u202F€ (bâti + mobilier + travaux).",
+    prixAchat: 200000,
+    prixVente: 240000,
+    dateAchat: new Date(2021, 0, 1),
+    fraisAcqui: 15000,   // forfait 7,5%
+    travaux: 30000,       // forfait 15%
+    fraisCession: 3000,
+    amortissements: 55000,
+    optimMsg: "Avec 55 000\u202F€ d\u2019amortissements réintégrés, l\u2019impact fiscal est massif. Vérifiez si le passage en LMP est avantageux — si vos recettes dépassent 23 000\u202F€/an, l\u2019exonération LMP après 5 ans d\u2019activité pourrait supprimer l\u2019impôt.",
+  },
+  {
+    title: "LMNP longue détention — 20 ans",
+    subtitle: "Appartement meublé à Nantes acheté 130 000\u202F€ en 2006, vendu 195 000\u202F€ en 2026. Amortissements cumulés : 60 000\u202F€.",
+    prixAchat: 130000,
+    prixVente: 195000,
+    dateAchat: new Date(2006, 0, 1),
+    fraisAcqui: 9750,    // forfait 7,5%
+    travaux: 19500,       // forfait 15%
+    fraisCession: 2500,
+    amortissements: 60000,
+    optimMsg: "Malgré 60 000\u202F€ d\u2019amortissements réintégrés, l\u2019abattement IR de 90\u202F% après 20 ans réduit fortement l\u2019impact. En attendant 2 ans de plus, l\u2019IR sera totalement exonéré — seuls les PS resteront dus.",
+  },
+];
+
+function scrollToSimulator() {
+  const el = document.querySelector("[data-simulator-form]");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function ExamplesSectionLMNP() {
+  const results = useMemo(() => {
+    const dateVente = new Date(2026, 0, 1);
+    return LMNP_EXAMPLES.map((ex) => {
+      // Sans réforme (amortissements = 0)
+      const sans = computePlusValue(
+        ex.prixAchat, ex.prixVente, ex.dateAchat, dateVente,
+        ex.fraisAcqui, ex.travaux, ex.fraisCession,
+        { typeResidence: "lmnp", amortissementsLMNP: 0 }
+      );
+      // Avec réforme (amortissements réintégrés)
+      const avec = computePlusValue(
+        ex.prixAchat, ex.prixVente, ex.dateAchat, dateVente,
+        ex.fraisAcqui, ex.travaux, ex.fraisCession,
+        { typeResidence: "lmnp", amortissementsLMNP: ex.amortissements }
+      );
+      return { sans, avec };
+    });
+  }, []);
+
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px", marginTop: 48 }}>
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, fontWeight: 400, color: C.text, marginBottom: 8, marginTop: 0 }}>
+        Exemples de calcul de plus-value LMNP — Impact des amortissements
+      </h2>
+      <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, margin: "0 0 24px 0", maxWidth: 760 }}>
+        Trois situations courantes pour comprendre l&apos;impact de la réforme 2025 sur votre plus-value en location meublée.
+      </p>
+
+      <div className="lmnp-examples-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {LMNP_EXAMPLES.map((ex, i) => {
+          const { sans, avec } = results[i];
+          if (!sans || !avec) return null;
+          const surcout = avec.totalImpot - sans.totalImpot;
+
+          const rows: { label: string; valSans: string; valAvec: string; bold?: boolean; red?: boolean }[] = [
+            { label: "Prix d\u2019achat corrigé", valSans: fmt(sans.prixAchatCorrige), valAvec: `${fmt(avec.prixAchatCorrige)} (\u2212${fmt(ex.amortissements).replace(" €", "")} amort.)` },
+            { label: "PV brute", valSans: fmt(sans.pvBrute), valAvec: fmt(avec.pvBrute) },
+            { label: `Abattement IR (${sans.abatIRPct.toFixed(0)}%)`, valSans: fmt(sans.pvBrute * sans.abatIRPct / 100), valAvec: fmt(avec.pvBrute * avec.abatIRPct / 100) },
+            { label: `Abattement PS (${sans.abatPSPct.toFixed(1)}%)`, valSans: fmt(sans.pvBrute * sans.abatPSPct / 100), valAvec: fmt(avec.pvBrute * avec.abatPSPct / 100) },
+            { label: "IR (19%)", valSans: fmt(sans.impotIR), valAvec: fmt(avec.impotIR) },
+            { label: "PS (17,2%)", valSans: fmt(sans.impotPS), valAvec: fmt(avec.impotPS) },
+            ...(sans.surtaxe > 0 || avec.surtaxe > 0 ? [{ label: "Surtaxe", valSans: fmt(sans.surtaxe), valAvec: fmt(avec.surtaxe) }] : []),
+            { label: "Total impôt", valSans: fmt(sans.totalImpot), valAvec: fmt(avec.totalImpot), bold: true },
+            { label: "Surcoût réforme", valSans: "—", valAvec: `+${fmt(surcout)}`, bold: true, red: true },
+          ];
+
+          return (
+            <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              {/* Header */}
+              <div style={{ background: C.accentBg, padding: 16 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{ex.title}</div>
+                <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>{ex.subtitle}</div>
+              </div>
+
+              {/* Tableau comparatif */}
+              <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: "6px 0", textAlign: "left", fontSize: 10, color: C.textMuted, fontWeight: 600, borderBottom: `1px solid ${C.border}` }}></th>
+                      <th style={{ padding: "6px 4px", textAlign: "right", fontSize: 10, color: C.textMuted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" }}>Sans réforme</th>
+                      <th style={{ padding: "6px 4px", textAlign: "right", fontSize: 10, color: "#E05656", fontWeight: 700, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap", background: "rgba(224,86,86,0.03)" }}>Avec réforme</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, j) => (
+                      <tr key={j} style={{ borderBottom: `1px solid ${C.accentBg}` }}>
+                        <td style={{ padding: "5px 0", color: row.red ? "#E05656" : C.textMuted, fontWeight: row.bold ? 700 : 400, fontSize: 12 }}>{row.label}</td>
+                        <td style={{ padding: "5px 4px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: row.bold ? 700 : 500, color: row.red ? C.textMuted : C.text, fontSize: 12 }}>{row.valSans}</td>
+                        <td style={{ padding: "5px 4px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: row.bold ? 700 : 500, color: row.red ? "#E05656" : "#3F3D6E", background: "rgba(224,86,86,0.03)", fontSize: 12 }}>{row.valAvec}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Résultats finaux */}
+                <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 2 }}>Impôt total (réforme)</div>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: "#E05656" }}>{fmt(avec.totalImpot)}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 2 }}>Net vendeur (réforme)</div>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: "#3BAF7A" }}>{fmt(avec.netVendeur)}</div>
+                  </div>
+                </div>
+
+                {/* Message d'optimisation */}
+                <div style={{ marginTop: 12, fontSize: 12, color: C.accent, fontStyle: "italic", lineHeight: 1.5 }}>
+                  💡 La réintégration des {fmt(ex.amortissements)} d&apos;amortissements augmente votre impôt de <strong style={{ color: "#E05656" }}>+{fmt(surcout)}</strong>. {ex.optimMsg}
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={scrollToSimulator}
+                  style={{
+                    marginTop: "auto", width: "100%", padding: "10px 16px", background: "none",
+                    border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    color: C.accent, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "border-color 0.2s",
+                  }}
+                >
+                  Simulez votre propre situation ↑
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .lmnp-examples-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -313,6 +491,7 @@ export default function LMNPClient() {
         customAlertBanner={<LMNPAlertBanner />}
         customSocialProof={<LMNPSocialProof />}
         customCTA={<CTAExpertComptable />}
+        customExamplesSection={<ExamplesSectionLMNP />}
         lockedTypeLabel="Location meublée (LMNP)"
         tooltipAmortissements="Indiquez le total de tous les amortissements que vous avez déduits de vos revenus BIC depuis l'acquisition. Ce chiffre se trouve sur vos liasses fiscales (formulaire 2033-B, colonne « Amortissements déduits au titre de l'exercice », cumulé sur toutes les années). Si vous avez un expert-comptable, demandez-lui le total cumulé des amortissements : bâti + mobilier + travaux amortis."
       />
