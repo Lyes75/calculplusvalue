@@ -86,6 +86,24 @@ export default function MentionsLegales() {
             </p>
           </section>
 
+          {/* Protection des données */}
+          <section style={{ marginBottom: 36 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2D2B55", borderBottom: "2px solid #56CBAD", paddingBottom: 8, marginBottom: 16, fontFamily: "'DM Serif Display', serif" }}>
+              Protection des données personnelles (RGPD)
+            </h2>
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "#3F3D6E" }}>
+              calculplusvalue.fr collecte votre adresse email uniquement lorsque vous demandez à recevoir votre rapport de simulation par email. Cette donnée est stockée de manière sécurisée et n&rsquo;est jamais partagée avec des tiers.
+            </p>
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "#3F3D6E" }}>
+              Vous pouvez demander la suppression de vos données ou vous désabonner à tout moment en cliquant sur le lien prévu à cet effet dans chaque email, ou en contactant{" "}
+              <a href="/contact" style={{ color: "#56CBAD", textDecoration: "none" }}>contact@calculplusvalue.fr</a>.
+            </p>
+            <p style={{ margin: 0, fontSize: 14, color: "#3F3D6E" }}>
+              <strong>Responsable du traitement :</strong> NETAUDIENCE.<br />
+              <strong>Base légale :</strong> consentement (art. 6.1.a RGPD).
+            </p>
+          </section>
+
           {/* Disclaimer */}
           <section>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2D2B55", borderBottom: "2px solid #56CBAD", paddingBottom: 8, marginBottom: 16, fontFamily: "'DM Serif Display', serif" }}>

@@ -108,7 +108,9 @@ function EmailModal({ onClose, onSubmit }: EmailModalProps) {
               style={{ width: "100%", padding: "12px 0", background: "#2D2B55", color: "#E0DEF0", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
               Recevoir mon rapport gratuit
             </button>
-            <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", marginTop: 10 }}>Pas de spam. Données non partagées. Désabonnement en 1 clic.</div>
+            <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>
+              En soumettant votre email, vous acceptez de recevoir votre rapport et des conseils fiscaux par email. Désabonnement en 1 clic. Données non partagées.
+            </div>
           </>
         ) : (
           <div style={{ textAlign: "center" }}>
@@ -290,6 +292,8 @@ export default function SimulateurBase({
     if (!result) return;
     const data = { prixAchat: pa, prixVente: pv, fraisAcqui, travaux: travauxVal, fraisCession: fc, fraisMode, travauxMode };
     const htmlContent = generatePDFContent(result, data, recommendations, scenarios);
+
+    // 1. Envoi du rapport PDF par email
     try {
       await fetch("/api/send-report", {
         method: "POST",
@@ -299,7 +303,31 @@ export default function SimulateurBase({
     } catch (err) {
       console.error("Erreur envoi email:", err);
     }
-  }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios]);
+
+    // 2. Capture du lead en base de données
+    try {
+      await fetch("/api/email-capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          source: "modal_rapport_pdf",
+          calculData: {
+            prix_achat: pa || null,
+            prix_vente: pv || null,
+            duree_detention: result?.years ?? null,
+            impot_total: result?.totalImpot ? Math.round(result.totalImpot) : null,
+            net_vendeur: result?.netVendeur ? Math.round(result.netVendeur) : null,
+            type_bien: situation || null,
+          },
+          page_source: typeof window !== "undefined" ? window.location.pathname : "/",
+        }),
+      });
+    } catch (err) {
+      // UX first : même si le backend échoue, le PDF a été envoyé
+      console.error("Erreur capture lead:", err);
+    }
+  }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios, situation]);
 
   // ── Styles ──
   const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
