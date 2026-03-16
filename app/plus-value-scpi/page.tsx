@@ -26,34 +26,58 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Comment est calculée la plus-value sur des parts de SCPI ?",
+      name: "Les parts de SCPI en assurance-vie sont-elles concernées par ce simulateur ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La plus-value sur des parts de SCPI détenues en direct est calculée exactement comme une plus-value immobilière classique des particuliers. La plus-value brute = prix de cession − prix de souscription − frais de souscription. Des abattements pour durée de détention s'appliquent dès la 6e année, jusqu'à exonération totale d'IR à 22 ans et de prélèvements sociaux à 30 ans. Le taux d'imposition est de 19% (IR) + 17,2% (PS) = 36,2% avant abattements.",
+        text: "Non. Les parts de SCPI détenues dans un contrat d'assurance-vie ou un PER sont soumises à la fiscalité de l'enveloppe (assurance-vie ou PER), pas au régime des plus-values immobilières. La taxation se fait lors des retraits du contrat, au PFU de 30% ou au barème progressif selon l'option choisie, avec un abattement après 8 ans en assurance-vie. Ce simulateur ne concerne que les parts détenues en direct (achat en pleine propriété ou en démembrement, hors enveloppe fiscale).",
       },
     },
     {
       "@type": "Question",
-      name: "Les frais de souscription SCPI sont-ils déductibles de la plus-value ?",
+      name: "Faut-il choisir le forfait 7,5% ou les frais réels pour les SCPI ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Oui, les frais de souscription sont déductibles du prix de revient des parts, ce qui réduit la plus-value imposable. Vous avez le choix entre le forfait de 7,5% du prix de souscription (sans justificatif) ou les frais réels effectivement payés (avec justificatif de la société de gestion). Les frais de souscription SCPI étant généralement de 8 à 12%, les frais réels sont presque toujours supérieurs au forfait 7,5% — il est donc conseillé d'opter pour les frais réels.",
+        text: "Dans 90% des cas, les frais réels sont plus avantageux. Les frais de souscription des SCPI sont généralement de 8 à 12% du montant souscrit, bien supérieurs au forfait 7,5%. L'exception concerne les parts achetées sur le marché secondaire, où les frais sont très faibles. Dans ce cas, le forfait 7,5% est nettement préférable. Demandez toujours le justificatif de frais à votre société de gestion avant de faire le choix.",
       },
     },
     {
       "@type": "Question",
-      name: "Quelle différence entre SCPI en direct et SCPI en assurance-vie pour la plus-value ?",
+      name: "Comment connaître mes frais de souscription exacts ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La différence est fondamentale. Les parts de SCPI détenues en direct (hors enveloppe) relèvent du régime des plus-values immobilières des particuliers, avec les abattements pour durée de détention. Les parts de SCPI détenues dans un contrat d'assurance-vie ou un PER relèvent de la fiscalité de l'enveloppe (assurance-vie ou PER), pas du régime des plus-values immobilières. Ce simulateur concerne uniquement les parts de SCPI détenues en direct.",
+        text: "Contactez votre société de gestion (Corum, Primonial, Amundi, La Française, etc.) et demandez une attestation de frais de souscription. Le montant figure généralement sur votre bulletin de souscription initial. Si vous avez acheté via un conseiller ou une plateforme, les frais peuvent avoir été négociés à la baisse — vérifiez le montant effectivement payé, pas le taux affiché par la SCPI.",
       },
     },
     {
       "@type": "Question",
-      name: "La durée de détention des parts de SCPI compte-t-elle pour les abattements ?",
+      name: "La durée de détention court-elle depuis la souscription ou depuis la jouissance des parts ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Oui, la durée de détention des parts de SCPI est prise en compte pour les abattements, exactement comme pour un bien immobilier en direct. Elle court depuis la date de souscription (ou d'achat en marché secondaire). Les abattements commencent à la 6e année de détention (6%/an pour l'IR), l'exonération totale d'IR intervient à 22 ans, et l'exonération totale des prélèvements sociaux à 30 ans.",
+        text: "La durée de détention pour le calcul des abattements court depuis la date d'acquisition des parts, c'est-à-dire la date de souscription effective (date de paiement) ou la date d'achat sur le marché secondaire. Ce n'est PAS la date de jouissance (qui est la date à partir de laquelle vous percevez les dividendes, souvent 3 à 6 mois après la souscription). La date d'acquisition figure sur votre bulletin de souscription.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Peut-on déduire des travaux pour réduire la plus-value sur des parts de SCPI ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Non. Le forfait 15% pour travaux et la déduction de travaux réels ne s'appliquent pas aux parts de SCPI. Vous ne pouvez pas déduire les travaux réalisés par la SCPI sur son patrimoine immobilier — ces travaux sont supportés par la société et impactent la valeur de la part, mais ne constituent pas des dépenses engagées par l'associé. Les seules déductions possibles sont les frais d'acquisition et les frais de cession éventuels.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Comment est calculée la plus-value si j'ai souscrit en plusieurs fois (DCA) ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Si vous avez souscrit des parts à des dates et prix différents (investissement progressif), chaque lot de parts a son propre prix d'acquisition et sa propre durée de détention. Lors de la revente, vous pouvez choisir la méthode FIFO (First In, First Out — les parts les plus anciennes sont vendues en premier, donc avec les abattements les plus élevés) ou vendre un lot spécifique. La méthode FIFO est souvent la plus avantageuse.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "La surtaxe sur les plus-values > 50 000€ s'applique-t-elle aux SCPI ?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Oui. Si votre plus-value nette d'IR dépasse 50 000€, la surtaxe progressive de 2% à 6% s'applique comme pour un bien en direct. En pratique, cette surtaxe est rare sur les SCPI car les montants investis par particulier dépassent rarement le seuil qui génère une PV nette > 50K€.",
       },
     },
   ],
