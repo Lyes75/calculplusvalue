@@ -61,6 +61,8 @@ export default function AdminDashboard() {
   const [filterPage, setFilterPage] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [searchEmail, setSearchEmail] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchLeads = useCallback(async (key: string) => {
     setLoading(true);
@@ -103,6 +105,28 @@ export default function AdminDashboard() {
   }, []);
 
   const handleLogin = () => { if (apiKey.length > 10) fetchLeads(apiKey); };
+
+  const handleDeleteLead = async (email: string) => {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/leads", {
+        method: "DELETE",
+        headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setLeads(prev => prev.filter(l => l.email !== email));
+        setTotal(prev => prev - 1);
+        setSelectedLead(null);
+        setConfirmDelete(false);
+      } else {
+        setError("Erreur lors de la suppression");
+      }
+    } catch {
+      setError("Erreur de connexion");
+    }
+    setDeleting(false);
+  };
 
   const handleExportCSV = async () => {
     try {
@@ -356,7 +380,7 @@ export default function AdminDashboard() {
                       const pv = lead.prix_achat && lead.prix_vente ? lead.prix_vente - lead.prix_achat : null;
                       return (
                         <tr key={i}
-                          onClick={() => setSelectedLead(isSelected ? null : lead)}
+                          onClick={() => { setSelectedLead(isSelected ? null : lead); setConfirmDelete(false); }}
                           style={{
                             borderBottom: "1px solid #F0EEF5",
                             cursor: "pointer",
@@ -472,8 +496,40 @@ export default function AdminDashboard() {
               </div>
 
               {/* Source technique */}
-              <div style={{ fontSize: 10, color: "#9B97C4" }}>
+              <div style={{ fontSize: 10, color: "#9B97C4", marginBottom: 16 }}>
                 Source : {selectedLead.source || "—"}
+              </div>
+
+              {/* Suppression */}
+              <div style={{ borderTop: "1px solid #E0DEF0", paddingTop: 14 }}>
+                {!confirmDelete ? (
+                  <button onClick={() => setConfirmDelete(true)}
+                    style={{ width: "100%", padding: "8px 0", background: "none", border: "1px solid #E0DEF0", borderRadius: 8, fontSize: 12, color: "#6E6B8A", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#E05656"; e.currentTarget.style.color = "#E05656"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#E0DEF0"; e.currentTarget.style.color = "#6E6B8A"; }}>
+                    🗑️ Supprimer ce lead
+                  </button>
+                ) : (
+                  <div style={{ background: "#FFF5F5", border: "1px solid #FFDADA", borderRadius: 8, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#E05656", marginBottom: 8 }}>
+                      Supprimer définitivement ce lead ?
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6E6B8A", marginBottom: 10 }}>
+                      {selectedLead.email}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => handleDeleteLead(selectedLead.email)}
+                        disabled={deleting}
+                        style={{ flex: 1, padding: "7px 0", background: "#E05656", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: deleting ? "wait" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: deleting ? 0.6 : 1 }}>
+                        {deleting ? "Suppression..." : "Confirmer"}
+                      </button>
+                      <button onClick={() => setConfirmDelete(false)}
+                        style={{ flex: 1, padding: "7px 0", background: "#fff", color: "#6E6B8A", border: "1px solid #E0DEF0", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

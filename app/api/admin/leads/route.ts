@@ -60,6 +60,32 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// DELETE — Suppression d'un lead par email
+export async function DELETE(request: NextRequest) {
+  const apiKey = request.headers.get("x-api-key");
+  if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email) {
+      return NextResponse.json({ error: "Email requis" }, { status: 400 });
+    }
+
+    const sql = getDb();
+
+    await sql`DELETE FROM email_leads WHERE email = ${email.toLowerCase().trim()}`;
+
+    return NextResponse.json({ success: true, deleted: email });
+  } catch (error) {
+    console.error("[ADMIN DELETE ERROR]", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
 // POST — Export CSV
 export async function POST(request: NextRequest) {
   const apiKey = request.headers.get("x-api-key");
