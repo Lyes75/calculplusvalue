@@ -233,9 +233,9 @@ export default function ArticleLMNP2026() {
           </p>
 
           {/* ── H2: Micro-BIC ── */}
-          <h2 style={h2Style}>Le <a href="https://www.impots.gouv.fr/particulier/les-regimes-dimposition" target="_blank" rel="noopener noreferrer" style={{ color: "#56CBAD", textDecoration: "underline", textUnderlineOffset: 3 }}>micro-BIC</a>, grand gagnant surprise de la réforme</h2>
+          <h2 style={h2Style}>Le micro-BIC, grand gagnant surprise de la réforme</h2>
           <p style={pStyle}>
-            Un dispositif sous-estimé dans le débat : le micro-BIC.
+            Un dispositif sous-estimé dans le débat : le <a href="https://www.impots.gouv.fr/particulier/les-regimes-dimposition" target="_blank" rel="noopener noreferrer" style={{ color: "#56CBAD", textDecoration: "underline", textUnderlineOffset: 3 }}>micro-BIC</a>.
           </p>
           <p style={pStyle}>
             L'abattement forfaitaire de 50 % sur les loyers ne génère aucun amortissement comptable. Pas d'amortissement déduit, rien à réintégrer.
