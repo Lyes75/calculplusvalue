@@ -3,9 +3,9 @@ import ExonerationsClient from "./ExonerationsClient";
 
 // ── Métadonnées SEO ──────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "Exonérations Plus-Value Immobilière 2026 — Guide Complet | calculplusvalue.fr",
+  title: "Exonérations de plus-value immobilière | calculplusvalue.fr",
   description:
-    "Tous les cas d'exonération de la plus-value immobilière en 2026 : résidence principale, durée de détention, primo-accédant, retraité, expatrié, expropriation. Guide complet.",
+    "Calculez la plus-value sur la vente de votre terrain. Forfait 15% travaux non applicable, viabilisation et bornage déductibles sur factures. Gratuit, barèmes 2026.",
   alternates: {
     canonical: "https://calculplusvalue.fr/exonerations-plus-value",
   },

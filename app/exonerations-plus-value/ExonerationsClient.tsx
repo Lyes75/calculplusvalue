@@ -613,7 +613,7 @@ export default function ExonerationsClient() {
             Guide complet 2026
           </div>
           <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.2, marginBottom: 16, marginTop: 0 }}>
-            Exonérations de Plus-Value Immobilière
+            Exonérations de plus-value immobilière — Guide complet 2026
           </h1>
           <p style={{ fontSize: 16, color: "#C8C6E0", lineHeight: 1.7, marginBottom: 32, maxWidth: 620, marginLeft: "auto", marginRight: "auto" }}>
             Résidence principale, durée de détention, primo-accédant, retraité, expatrié… Tous les cas où vous ne payez pas (ou moins) de plus-value, expliqués avec conditions et références légales.
