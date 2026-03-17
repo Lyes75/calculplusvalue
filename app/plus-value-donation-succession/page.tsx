@@ -3,9 +3,9 @@ import DonationClient from "./DonationClient";
 
 // ── Métadonnées SEO ──────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "Plus-Value après Donation ou Succession 2026 — Simulateur Gratuit | calculplusvalue.fr",
+  title: "Simulateur plus-value immobilière succession et donation 2026 | calculplusvalue.fr",
   description:
-    "Calculez la plus-value sur un bien hérité ou reçu en donation. Prix d'acquisition = valeur déclarée dans l'acte. Forfait 7,5% non applicable. Frais réels et forfait travaux déductibles. Simulateur gratuit.",
+    "Calculez la plus-value d'un bien hérité ou reçu en donation. Gratuit, barèmes 2026.",
   alternates: {
     canonical: "https://calculplusvalue.fr/plus-value-donation-succession",
   },

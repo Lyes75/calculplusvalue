@@ -774,7 +774,7 @@ export default function DonationClient() {
         labelPrixAchat="Valeur d\u00e9clar\u00e9e dans l\u2019acte"
         labelFraisAcquisition="Frais r\u00e9els (droits de mutation + notaire)"
         heroEyebrow="Simulateur donation & succession"
-        heroTitle="Plus-value sur un bien h\u00e9rit\u00e9 ou re\u00e7u en donation"
+        heroTitle="Simulateur plus-value immobilière suite à une succession ou donation"
         heroDescription="Le prix d\u2019acquisition retenu est la valeur d\u00e9clar\u00e9e dans l\u2019acte. Frais r\u00e9els uniquement (pas de forfait 7,5%). Dur\u00e9e de d\u00e9tention depuis la date du d\u00e9c\u00e8s ou de la donation."
         heroBadges={[
           { icon: "\ud83c\udf81", label: "Valeur d\u00e9clar\u00e9e dans l\u2019acte" },
