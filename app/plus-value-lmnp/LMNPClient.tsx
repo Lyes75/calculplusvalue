@@ -719,6 +719,25 @@ export default function LMNPClient() {
         <FAQSectionLMNP />
         <SourcesLegalesLMNP />
       </div>
+      {/* Bloc "À lire aussi" — article LMNP */}
+      <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#F4F3FA", padding: "0 24px 40px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ background: "#EEEDF5", borderLeft: "3px solid #56CBAD", borderRadius: 12, padding: "16px 20px" }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#2D2B55", marginBottom: 6 }}>
+              📰 À lire aussi
+            </div>
+            <div style={{ fontSize: 14, color: "#2D2B55", lineHeight: 1.6, marginBottom: 4 }}>
+              <strong>« Je vends mon LMNP en 2026 : combien vais-je payer après la réforme ? »</strong>
+            </div>
+            <div style={{ fontSize: 13, color: "#6E6B8A", lineHeight: 1.5, marginBottom: 10 }}>
+              Cas concret avec calcul étape par étape, comparaison avant/après réforme, et leviers pour réduire l'impôt.
+            </div>
+            <Link href="/blog/vendre-lmnp-2026" style={{ fontSize: 14, color: "#56CBAD", fontWeight: 600, textDecoration: "none" }}>
+              → Lire l'article
+            </Link>
+          </div>
+        </div>
+      </div>
       <AutresSimulateurs />
     </>
   );

@@ -12,6 +12,8 @@ const LINKS = [
   { href: "/plus-value-scpi", label: "📈 SCPI" },
   { href: "/plus-value-indivision", label: "⚖️ Indivision" },
   { href: "/exonerations-plus-value", label: "✅ Exonérations" },
+  { href: "/blog", label: "📰 Nos articles" },
+  { href: "/contact", label: "✉️ Contact" },
 ];
 
 export default function NavBar() {
