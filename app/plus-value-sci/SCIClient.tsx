@@ -642,7 +642,7 @@ export default function SCIClient() {
         showQuotePart={true}
         showSCI_IS_Options={true}
         heroEyebrow="Simulateur SCI — IR et IS"
-        heroTitle="Plus-value en SCI : comparez les régimes IR et IS"
+        heroTitle="Simulateur plus-value SCI : comparez les régimes IR et IS"
         heroDescription="Calcul par quote-part, comparaison régime des particuliers vs impôt sur les sociétés, impact des amortissements en SCI IS."
         heroBadges={[
           { icon: "⚖️", label: "Comparaison IR vs IS" },

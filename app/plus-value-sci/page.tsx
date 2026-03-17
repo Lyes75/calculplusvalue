@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 // ── Métadonnées SEO ──────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "Plus-Value SCI 2026 — Simulateur IR vs IS | calculplusvalue.fr",
+  title: "Simulateur plus-value SCI — Comparaison IR vs IS | calculplusvalue.fr",
   description:
-    "Calculez la plus-value de votre SCI à l'IR ou à l'IS. Comparaison des deux régimes. Quote-part, amortissements, taux IS 15% et 25%. Simulateur gratuit.",
+    "Simulateur plus-value SCI gratuit. Calculez l'impôt par quote-part, comparez SCI à l'IR vs SCI à l'IS.",
   alternates: {
     canonical: "https://calculplusvalue.fr/plus-value-sci",
   },
