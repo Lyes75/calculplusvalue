@@ -805,7 +805,7 @@ export default function SCPIClient() {
         labelPrixAchat="Prix de souscription (ou prix d'achat secondaire)"
         labelFraisAcquisition="Frais de souscription"
         heroEyebrow="Simulateur cession de parts SCPI"
-        heroTitle="Plus-value sur la revente de parts de SCPI"
+        heroTitle="Simulateur plus-value SCPI : calculez l'impôt sur la revente de vos parts"
         heroDescription="Régime des plus-values des particuliers. Les frais de souscription (8-12%) sont souvent plus avantageux que le forfait 7,5%. Pas de forfait travaux applicable. Le simulateur calcule votre impôt en tenant compte de la durée de détention depuis la date de souscription."
         heroBadges={[
           { icon: "📈", label: "Frais de souscription déductibles (réels > forfait 7,5%)" },

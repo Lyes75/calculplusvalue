@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import SCPIClient from "./SCPIClient";
 
 export const metadata: Metadata = {
-  title: "Plus-Value SCPI 2026 — Simulateur Cession de Parts | calculplusvalue.fr",
+  title: "Simulateur plus-value SCPI - Revente parts SCPI | calculplusvalue.fr",
   description:
-    "Calculez l'impôt sur la plus-value lors de la revente de parts de SCPI. Frais de souscription déductibles, abattements pour durée de détention. Simulateur gratuit.",
+    "Simulateur plus-value SCPI gratuit. Calculez l'impôt à la revente de vos parts. Barèmes CGI 2026.",
   alternates: {
     canonical: "https://calculplusvalue.fr/plus-value-scpi",
   },
