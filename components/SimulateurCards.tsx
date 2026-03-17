@@ -9,6 +9,7 @@ const cards = [
   { icon: "🏢", title: "SCI (IR ou IS)", desc: "Quote-part, comparaison IR vs IS, amortissements", href: "/plus-value-sci" },
   { icon: "🌱", title: "Terrain constructible", desc: "Pas de forfait travaux, taxe communale", href: "/plus-value-terrain" },
   { icon: "📈", title: "Parts de SCPI", desc: "Frais de souscription, régime des particuliers", href: "/plus-value-scpi" },
+  { icon: "⚖️", title: "Indivision & Démembrement", desc: "Quote-part, surtaxe par indivisaire, barème art. 669 CGI", href: "/plus-value-indivision" },
 ];
 
 export default function SimulateurCards() {
