@@ -3,9 +3,9 @@ import NonResidentClient from "./NonResidentClient";
 
 // ── Métadonnées SEO ──────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: "Plus-Value Immobilière Non-Résident 2026 — Simulateur Expatrié | calculplusvalue.fr",
+  title: "Simulateur plus-value immobilière non résident 2026 — Expatrié | calculplusvalue.fr",
   description:
-    "Calculez votre impôt sur la plus-value en tant que non-résident ou expatrié. Taux PS réduit UE/EEE (7,5%), exonération 150K€ anciens résidents, représentant fiscal. Simulateur gratuit barèmes 2026.",
+    "Simulateur plus-value immobilière pour non-résidents et expatriés. Gratuit, barèmes 2026.",
   alternates: {
     canonical: "https://calculplusvalue.fr/plus-value-non-resident",
   },
