@@ -739,7 +739,7 @@ export default function TerrainClient() {
         showTypeResidence={false}
         disableForfaitTravaux={true}
         heroEyebrow="Simulateur terrain constructible"
-        heroTitle="Plus-value sur la vente d'un terrain"
+        heroTitle="Plus-value sur la vente d'un terrain : simulateur gratuit"
         heroDescription="Même régime que les biens bâtis, avec une exception&nbsp;: le forfait 15% travaux ne s'applique pas aux terrains non bâtis. Frais de viabilisation et bornage déductibles sur factures."
         heroBadges={[
           { icon: "🌱", label: "Forfait 15% travaux non applicable" },

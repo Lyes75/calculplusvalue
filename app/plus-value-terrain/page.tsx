@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import TerrainClient from "./TerrainClient";
 
 export const metadata: Metadata = {
-  title: "Plus-Value Terrain Constructible 2026 — Simulateur Gratuit | calculplusvalue.fr",
+  title: "Plus-value sur la vente d'un terrain — Simulateur 2026 | calculplusvalue.fr",
   description:
-    "Calculez la plus-value sur la vente d'un terrain constructible, agricole ou jardin. Mêmes abattements que les particuliers, pas de forfait travaux. Simulateur gratuit.",
+    "Calculez la plus-value sur la vente de votre terrain. Forfait 15% travaux non applicable, viabilisation et bornage déductibles sur factures. Gratuit, barèmes 2026.",
   alternates: {
     canonical: "https://calculplusvalue.fr/plus-value-terrain",
   },
