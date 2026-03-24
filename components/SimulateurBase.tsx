@@ -1061,9 +1061,24 @@ export default function SimulateurBase({
                         desc="Obtenez une estimation gratuite basée sur les transactions récentes dans votre quartier."
                         cta="Estimer" color="#56CBAD" bgColor="rgba(86,203,173,0.06)" borderColor="#56CBAD" />
                       {result.netVendeur > 50000 && (
-                        <CTABlock icon="📈" title="Réinvestissez intelligemment"
-                          desc={`${fmt(result.netVendeur)} à placer ? Comparez les SCPI, l'assurance-vie et les placements immobiliers pour faire fructifier votre capital.`}
-                          cta="Comparer" color="#3BAF7A" bgColor="rgba(59,175,122,0.06)" borderColor="#3BAF7A" />
+                        <>
+                          <a
+                            href="https://www.awin1.com/cread.php?awinmid=13275&awinaffid=2813404&ued=https%3A%2F%2Fwww.linxea.com%2Fassurance-vie%2F"
+                            target="_blank"
+                            rel="noopener sponsored"
+                            style={{ background: "rgba(59,175,122,0.06)", border: "1px solid #3BAF7A", borderRadius: 12, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "transform 0.15s", textDecoration: "none" }}
+                            onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
+                            onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
+                          >
+                            <div style={{ fontSize: 28, flexShrink: 0 }}>📈</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 2 }}>Réinvestissez intelligemment</div>
+                              <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.4 }}>{fmt(result.netVendeur)} à placer ? Découvrez les meilleurs placements (assurance-vie, SCPI, PER) avec des frais d'entrée à 0%.</div>
+                            </div>
+                            <div style={{ background: "#3BAF7A", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>Comparer</div>
+                          </a>
+                          <span style={{ fontSize: 11, color: "#9B97C4", marginTop: -4, display: "block", paddingLeft: 4 }}>* Lien partenaire</span>
+                        </>
                       )}
                       {customCTA}
                     </div>
