@@ -97,7 +97,7 @@ export default function RootLayout({
             {/* Lien contextuel partenaire */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 18, marginBottom: 16 }}>
               <p style={{ fontSize: 13, color: "#9B97C4", lineHeight: 1.7, margin: 0 }}>
-                Vous avez un prêt immobilier en cours ? Simulez vos économies en assurance emprunteur sur <a href="https://calculemprunteur.fr" target="_blank" rel="noopener noreferrer" style={{ color: "#a78bfa", textDecoration: "underline" }}>CalculEmprunteur.fr</a>
+                Vous avez un prêt immobilier en cours ? Simulez vos économies en assurance emprunteur sur <a href="https://www.calculemprunteur.fr" target="_blank" rel="noopener noreferrer" style={{ color: "#a78bfa", textDecoration: "underline" }}>CalculEmprunteur.fr</a>
               </p>
             </div>
 
