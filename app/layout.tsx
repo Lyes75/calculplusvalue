@@ -94,6 +94,13 @@ export default function RootLayout({
               ))}
             </div>
 
+            {/* Lien contextuel partenaire */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 18, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: "#9B97C4", lineHeight: 1.7, margin: 0 }}>
+                Vous avez un prêt immobilier en cours ? <a href="https://calculemprunteur.fr" target="_blank" rel="noopener noreferrer" style={{ color: "#a78bfa", textDecoration: "underline" }}>Simulez vos économies en assurance emprunteur sur CalculEmprunteur.fr</a>
+              </p>
+            </div>
+
             {/* Disclaimer */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 20 }}>
               <p style={{ fontSize: 11, color: "#6E6B8A", lineHeight: 1.7, margin: "0 0 12px 0", maxWidth: 800 }}>
