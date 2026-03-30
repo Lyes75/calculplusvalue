@@ -602,18 +602,6 @@ export default function PlusValueSimulator() {
                   <div style={{ marginBottom: 20 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: C.textMuted, marginBottom: 12, paddingLeft: 4 }}>Pour aller plus loin</div>
                     <div style={{ display: "grid", gap: 10 }}>
-                      {result.totalImpot > 2000 && (
-                        <CTABlock
-                          icon="🎯" title="Optimisez votre fiscalité immobilière"
-                          desc={`Vous payez ${fmt(result.totalImpot)} d'impôt. Un conseiller patrimonial peut vous aider à réduire ce montant via des stratégies légales.`}
-                          cta="Bilan gratuit" color="#3F3D6E" bgColor="rgba(45,43,85,0.06)" borderColor="#3F3D6E"
-                        />
-                      )}
-                      <CTABlock
-                        icon="🏠" title="Estimez la valeur réelle de votre bien"
-                        desc="Obtenez une estimation gratuite basée sur les transactions récentes dans votre quartier."
-                        cta="Estimer" color="#56CBAD" bgColor="rgba(86,203,173,0.06)" borderColor="#56CBAD"
-                      />
                       {result.netVendeur > 50000 && (
                         <>
                           <a
