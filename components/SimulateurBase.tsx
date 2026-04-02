@@ -920,12 +920,12 @@ export default function SimulateurBase({
                               href="https://www.awin1.com/cread.php?awinmid=13275&awinaffid=2813404&ued=https%3A%2F%2Fwww.linxea.com%2Fassurance-vie%2F"
                               target="_blank"
                               rel="noopener sponsored"
-                              style={{ display: "block", background: "rgba(45,106,79,0.06)", borderRadius: 10, padding: "10px 16px", marginBottom: 20, textDecoration: "none", textAlign: "center", transition: "background 0.15s" }}
-                              onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,106,79,0.12)")}
-                              onMouseLeave={e => (e.currentTarget.style.background = "rgba(45,106,79,0.06)")}
+                              style={{ display: "block", background: "#f0fdf4", borderRadius: 10, padding: "10px 16px", marginBottom: 20, textDecoration: "none", textAlign: "center", cursor: "pointer", transition: "background 0.15s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "#e2f9e8"; const s = e.currentTarget.querySelector("span") as HTMLElement; if (s) s.style.textDecoration = "underline"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "#f0fdf4"; const s = e.currentTarget.querySelector("span") as HTMLElement; if (s) s.style.textDecoration = "none"; }}
                             >
                               <span style={{ fontSize: 14, color: "#2d6a4f", fontWeight: 600 }}>💡 Placez vos {fmt(result.netVendeur)} — voir les options →</span>
-                              <span style={{ display: "block", fontSize: 10, color: "#9B97C4", marginTop: 2 }}>* Lien partenaire</span>
+                              <span style={{ display: "block", fontSize: 10, color: "#b0b0b0", marginTop: 2 }}>* Lien partenaire</span>
                             </a>
                           )}
                           {pieData.length > 0 && (
