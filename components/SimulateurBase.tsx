@@ -915,6 +915,19 @@ export default function SimulateurBase({
                               <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Détention : {result.years} ans</div>
                             </div>
                           </div>
+                          {result.netVendeur > 50000 && (
+                            <a
+                              href="https://www.awin1.com/cread.php?awinmid=13275&awinaffid=2813404&ued=https%3A%2F%2Fwww.linxea.com%2Fassurance-vie%2F"
+                              target="_blank"
+                              rel="noopener sponsored"
+                              style={{ display: "block", background: "rgba(45,106,79,0.06)", borderRadius: 10, padding: "10px 16px", marginBottom: 20, textDecoration: "none", textAlign: "center", transition: "background 0.15s" }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "rgba(45,106,79,0.12)")}
+                              onMouseLeave={e => (e.currentTarget.style.background = "rgba(45,106,79,0.06)")}
+                            >
+                              <span style={{ fontSize: 14, color: "#2d6a4f", fontWeight: 600 }}>💡 Placez vos {fmt(result.netVendeur)} — voir les options →</span>
+                              <span style={{ display: "block", fontSize: 10, color: "#9B97C4", marginTop: 2 }}>* Lien partenaire</span>
+                            </a>
+                          )}
                           {pieData.length > 0 && (
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
                               <div style={{ width: 170, height: 170 }}>
@@ -1064,10 +1077,10 @@ export default function SimulateurBase({
                           >
                             <div style={{ fontSize: 28, flexShrink: 0 }}>📈</div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 2 }}>Réinvestissez intelligemment</div>
-                              <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.4 }}>{fmt(result.netVendeur)} à placer ? Découvrez les meilleurs placements (assurance-vie, SCPI, PER) avec des frais d'entrée à 0%.</div>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 2 }}>Que faire de vos {fmt(result.netVendeur)} ?</div>
+                              <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.4 }}>Faites fructifier votre capital sans frais : assurance-vie, SCPI, PER. Comparez les meilleurs placements.</div>
                             </div>
-                            <div style={{ background: "#3BAF7A", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>Comparer</div>
+                            <div style={{ background: "#3BAF7A", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>Simuler un placement</div>
                           </a>
                           <span style={{ fontSize: 11, color: "#9B97C4", marginTop: -4, display: "block", paddingLeft: 4 }}>* Lien partenaire</span>
                         </>
