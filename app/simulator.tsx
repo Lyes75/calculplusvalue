@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 // ── Tax Logic ──
 const IR_RATE = 0.19;
@@ -235,6 +235,8 @@ export default function PlusValueSimulator() {
   const [activeTab, setActiveTab] = useState("result");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
+  const [formCollapsed, setFormCollapsed] = useState(false);
+  const resultRef = useRef<HTMLDivElement>(null);
   const pa = parseFloat(prixAchat) || 0;
   const pv = parseFloat(prixVente) || 0;
   const fc = parseFloat(fraisCession) || 0;
@@ -293,6 +295,14 @@ export default function PlusValueSimulator() {
   }, [result, pa, pv, fraisAcqui, travauxVal, fc, fraisMode, travauxMode, recommendations, scenarios]);
   const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 15, color: C.text, background: C.card, outline: "none", transition: "border-color 0.2s", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" };
   const labelStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4, display: "flex", alignItems: "center" };
+  const prevResult = useRef<boolean>(false);
+  useEffect(() => {
+    if (result && !result.exonere && result.pvBrute > 0 && !prevResult.current) {
+      setFormCollapsed(true);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    }
+    prevResult.current = !!(result && !result.exonere && result.pvBrute > 0);
+  }, [result]);
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif", background: C.bg, minHeight: "100vh", color: C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
@@ -327,7 +337,7 @@ export default function PlusValueSimulator() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 60px" }}>
 
         {/* ── Intro avant simulateur ── */}
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24, display: formCollapsed ? "none" : "block" }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 400, color: C.text, margin: "0 0 12px 0" }}>
             Calculez votre impôt sur la plus-value en 30 secondes
           </h2>
@@ -349,8 +359,13 @@ export default function PlusValueSimulator() {
         </div>
 
         {/* Form */}
-        <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+        <div style={{ background: C.card, borderRadius: 14, border: `1px solid ${C.border}`, padding: formCollapsed ? "12px 20px" : "24px 20px", marginBottom: 14, transition: "padding 0.2s" }}>
+          {formCollapsed && (
+            <button onClick={() => setFormCollapsed(false)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "4px 0", fontSize: 13, fontWeight: 600, color: C.accent, fontFamily: "'DM Sans', sans-serif" }}>
+              ✏️ Modifier ma simulation <span style={{ fontSize: 10 }}>▼</span>
+            </button>
+          )}
+          <div style={{ display: formCollapsed ? "none" : "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             <div>
               <label style={labelStyle}>Situation du bien <Tip text="La résidence principale est totalement exonérée. Pour une résidence secondaire, un locatif ou un terrain, l'impôt sur la plus-value s'applique." /></label>
               <select value={situation} onChange={e => setSituation(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
@@ -404,6 +419,7 @@ export default function PlusValueSimulator() {
           </div>
         </div>
         {/* ═══ RESULTS ═══ */}
+        <div ref={resultRef} />
         {result && (
           <>
             {/* RP Exonération */}
@@ -439,7 +455,7 @@ export default function PlusValueSimulator() {
                     </div>
                   )}
                 </div>
-                <div style={{ background: C.card, borderRadius: "0 14px 14px 14px", border: `1px solid ${C.border}`, padding: "24px 20px", marginBottom: 20 }}>
+                <div style={{ background: C.card, borderRadius: "0 14px 14px 14px", border: `1px solid ${C.border}`, padding: "18px 20px", marginBottom: 16 }}>
                   {/* TAB: Result */}
                   {activeTab === "result" && (
                     <div>
@@ -451,21 +467,21 @@ export default function PlusValueSimulator() {
                         </div>
                       ) : (
                         <>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14, marginBottom: 24 }}>
-                            <div style={{ background: C.redBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
-                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.red, fontWeight: 700, marginBottom: 4 }}>Impôt total</div>
-                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.red }}>{fmt(result.totalImpot)}</div>
-                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Taux effectif : {fmtPct(result.tauxEffectif)}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 18 }}>
+                            <div style={{ background: C.redBg, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.red, fontWeight: 700, marginBottom: 3 }}>Impôt total</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: C.red }}>{fmt(result.totalImpot)}</div>
+                              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>Taux effectif : {fmtPct(result.tauxEffectif)}</div>
                             </div>
-                            <div style={{ background: C.greenBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
-                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.green, fontWeight: 700, marginBottom: 4 }}>Net vendeur</div>
-                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.green }}>{fmt(result.netVendeur)}</div>
-                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Après impôt</div>
+                            <div style={{ background: C.greenBg, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.green, fontWeight: 700, marginBottom: 3 }}>Net vendeur</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: C.green }}>{fmt(result.netVendeur)}</div>
+                              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>Après impôt</div>
                             </div>
-                            <div style={{ background: C.accentBg, borderRadius: 12, padding: 16, textAlign: "center" }}>
-                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.accent, fontWeight: 700, marginBottom: 4 }}>Plus-value brute</div>
-                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: C.accent }}>{fmt(result.pvBrute)}</div>
-                              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Détention : {result.years} ans</div>
+                            <div style={{ background: C.accentBg, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+                              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: C.accent, fontWeight: 700, marginBottom: 3 }}>Plus-value brute</div>
+                              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: C.accent }}>{fmt(result.pvBrute)}</div>
+                              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>Détention : {result.years} ans</div>
                             </div>
                           </div>
                           {result.netVendeur > 50000 && (
